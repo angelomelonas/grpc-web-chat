@@ -1,5 +1,7 @@
 .DS_Store
-node_modules
+/node_modules
+/node
+/proto
 /dist
 /proto
 
@@ -20,3 +22,4 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+*.iml
