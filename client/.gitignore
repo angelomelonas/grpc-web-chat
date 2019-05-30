@@ -1,7 +1,8 @@
 .DS_Store
 node_modules/
-/dist/
-/proto/
+node/
+dist/
+proto/
 npm-debug.log*
 
 # local env files
