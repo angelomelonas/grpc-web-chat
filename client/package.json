@@ -9,6 +9,7 @@
     "proto": "mkdirp proto && protoc --proto_path=../api chat.proto --js_out=import_style=commonjs:proto/ --grpc-web_out=import_style=commonjs+dts,mode=grpcwebtext:proto/"
   },
   "dependencies": {
+    "@types/google-protobuf": "^3.2.7",
     "core-js": "^2.6.5",
     "google-protobuf": "^3.8.0",
     "grpc-web": "^1.0.4",
