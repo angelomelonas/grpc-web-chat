@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package grpcwebchat;
+option java_package = "example.grpcweb.api";
+
+service Chat {
+    // Server streaming call
+    rpc Subscribe (SubscriptionRequest) returns (stream Message);
+
+    // Unary calls
+    rpc SendMessage (MessageRequest) returns (Message);
+
+    rpc Unsubscribe (UnsubscriptionRequest) returns (Message);
+}
+
+message Message {
+    string message = 1;
+    string username = 2;
+    int64 timestamp = 3;
+}
+
+message MessageRequest {
+    string message = 1;
+    string username = 2;
+}
+
+message SubscriptionRequest {
+    string username = 1;
+}
+
+message UnsubscriptionRequest {
+    string username = 1;
+}
