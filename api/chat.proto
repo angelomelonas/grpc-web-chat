@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package grpcwebchat;
-option java_package = "example.grpcweb.api";
+option java_package = "com.angelomelonas.grpcwebchat";
 
 service Chat {
     // Server streaming call
