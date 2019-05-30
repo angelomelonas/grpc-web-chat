@@ -1,2 +1,4 @@
+/src/main/resources/public/
 /target
-*.iml
+
+!.mvn/wrapper/maven-wrapper.jar
