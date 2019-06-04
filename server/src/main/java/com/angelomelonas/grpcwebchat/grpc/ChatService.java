@@ -1,43 +1,43 @@
 package com.angelomelonas.grpcwebchat.grpc;
 
+import com.angelomelonas.grpcwebchat.Chat.AuthenticationRequest;
+import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
+import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.ChatServiceGrpc.ChatServiceImplBase;
-import com.angelomelonas.grpcwebchat.chat.ChatSession;
-import com.angelomelonas.grpcwebchat.subscription.SubscriptionService;
+import com.angelomelonas.grpcwebchat.chat.ChatSessionService;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 @GRpcService
 public class ChatService extends ChatServiceImplBase {
-    private SubscriptionService subscriptionService;
-    private ChatSession chatSession;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ChatService.class);
+    private final ChatSessionService chatSessionService;
 
     public ChatService() {
-        this.subscriptionService = new SubscriptionService();
+        chatSessionService = new ChatSessionService();
+    }
+
+    @Override
+    public void authenticate(AuthenticationRequest request, StreamObserver<AuthenticationResponse> responseObserver) {
+        chatSessionService.create(responseObserver, UUID.randomUUID());
     }
 
     @Override
     public void subscribe(SubscriptionRequest request, StreamObserver<Message> responseObserver) {
-        new ChatSession(responseObserver, subscriptionService);
+        chatSessionService.subscribe(UUID.fromString(request.getUuid()), request.getUsername(), responseObserver);
     }
 
     @Override
-    public void unsubscribe(SubscriptionRequest request, StreamObserver<Message> responseObserver) {
-        // TODO: Get the following ID from the request.
-        UUID clientId = UUID.randomUUID();
-        subscriptionService.unsubscribe(clientId);
+    public void unsubscribe(UnsubscriptionRequest request, StreamObserver<Message> responseObserver) {
+        chatSessionService.unsubscribe(UUID.fromString(request.getUuid()), responseObserver);
     }
 
     @Override
     public void sendMessage(MessageRequest request, StreamObserver<Message> responseObserver) {
-        // TODO
+        chatSessionService.sendMessage(UUID.fromString(request.getUuid()), request.getUsername(), request.getMessage(), responseObserver);
     }
 }
