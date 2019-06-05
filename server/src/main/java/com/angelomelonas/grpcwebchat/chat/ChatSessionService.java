@@ -19,14 +19,18 @@ public class ChatSessionService {
         this.chatSessionHashMap = new HashMap<>();
     }
 
-    public void create(StreamObserver<AuthenticationResponse> responseObserver, UUID uuid) {
+    public void create(UUID uuid, StreamObserver<AuthenticationResponse> responseObserver) {
         ChatSession chatSession = new ChatSession(uuid);
 
         // Add the ChatSession.
         this.chatSessionHashMap.put(uuid, chatSession);
 
+        final AuthenticationResponse authenticationResponse = AuthenticationResponse.newBuilder()
+                .setUuid(String.valueOf(uuid))
+                .build();
+
         // Respond with the newly generated UUID.
-        responseObserver.onNext(AuthenticationResponse.newBuilder().setUuid(String.valueOf(uuid)).build());
+        responseObserver.onNext(authenticationResponse);
         responseObserver.onCompleted();
 
         LOGGER.info("ChatSession with UUID {} created.", uuid);

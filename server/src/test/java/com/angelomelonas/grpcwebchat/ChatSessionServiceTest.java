@@ -24,7 +24,7 @@ public class ChatSessionServiceTest {
                 .setUuid(String.valueOf(uuid))
                 .build();
 
-        chatSessionService.create(streamObserver, uuid);
+        chatSessionService.create(uuid, streamObserver);
 
         assertEquals(expectedAuthenticationResponse, streamObserver.response);
         assertTrue(streamObserver.onCompletedCalled);
@@ -41,7 +41,7 @@ public class ChatSessionServiceTest {
                 .setMessage("Client subscribed successfully.")
                 .build();
 
-        chatSessionService.create(streamObserver, uuid);
+        chatSessionService.create(uuid, streamObserver);
         chatSessionService.subscribe(uuid, "RandomTestUsername123", streamObserver);
 
         assertEquals(expectedMessageResponse.getMessage(), ((Message) streamObserver.response).getMessage());
@@ -60,7 +60,7 @@ public class ChatSessionServiceTest {
                 .setMessage("You have successfully been unsubscribed")
                 .build();
 
-        chatSessionService.create(streamObserver, uuid);
+        chatSessionService.create(uuid, streamObserver);
         chatSessionService.subscribe(uuid, "RandomTestUsername123", streamObserver);
         chatSessionService.unsubscribe(uuid, streamObserver);
 
@@ -80,7 +80,7 @@ public class ChatSessionServiceTest {
                 .setMessage("Message sent successfully.")
                 .build();
 
-        chatSessionService.create(streamObserver, uuid);
+        chatSessionService.create(uuid, streamObserver);
         chatSessionService.subscribe(uuid, "RandomTestUsername123", streamObserver);
         chatSessionService.sendMessage(uuid, "RandomTestUsername123", "Random Test Message 123", streamObserver);
 

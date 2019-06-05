@@ -23,7 +23,7 @@ public class ChatService extends ChatServiceImplBase {
 
     @Override
     public void authenticate(AuthenticationRequest request, StreamObserver<AuthenticationResponse> responseObserver) {
-        chatSessionService.create(responseObserver, UUID.randomUUID());
+        chatSessionService.create(UUID.randomUUID(), responseObserver);
     }
 
     @Override
