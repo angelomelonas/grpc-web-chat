@@ -36,7 +36,9 @@ public class ChatSessionService {
         ChatSession chatSession = chatSessionHashMap.get(uuid);
 
         if (chatSession == null) {
-            throw new IllegalArgumentException("Cannot subscribe. ChatSession does not exist.");
+            IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot subscribe. Client not authenticated.");
+            responseObserver.onError(illegalArgumentException);
+            throw illegalArgumentException;
         }
 
         chatSession.subscribe(uuid, username, responseObserver);
@@ -56,7 +58,9 @@ public class ChatSessionService {
         ChatSession chatSession = this.chatSessionHashMap.remove(uuid);
 
         if (chatSession == null) {
-            throw new IllegalArgumentException("Cannot unsubscribe. ChatSession does not exist.");
+            IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot unsubscribe. Client not subscribed.");
+            responseObserver.onError(illegalArgumentException);
+            throw illegalArgumentException;
         }
 
         chatSession.unsubscribe(uuid);
@@ -74,8 +78,10 @@ public class ChatSessionService {
     }
 
     public synchronized void sendMessage(UUID uuid, String username, String message, StreamObserver<Message> responseObserver) {
-        if(!this.chatSessionHashMap.containsKey(uuid)){
-            throw new IllegalArgumentException("Cannot send message. ChatSession does not exist.");
+        if (!this.chatSessionHashMap.containsKey(uuid)) {
+            IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot send message. ChatSession does not exist.");
+            responseObserver.onError(illegalArgumentException);
+            throw illegalArgumentException;
         }
 
         // Broadcast the message to everyone.

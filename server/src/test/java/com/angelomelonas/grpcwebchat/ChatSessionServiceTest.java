@@ -6,9 +6,9 @@ import com.angelomelonas.grpcwebchat.chat.ChatSessionService;
 import io.grpc.stub.StreamObserver;
 import org.junit.Test;
 
-import java.time.Instant;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -89,19 +89,61 @@ public class ChatSessionServiceTest {
         assertTrue(streamObserver.onCompletedCalled);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void sendMessageNoSubscriptionTest() {
+    @Test
+    public void subscribeNotAuthenticatedExceptionTest() {
         final ChatSessionService chatSessionService = new ChatSessionService();
         final MockStreamObserver streamObserver = new MockStreamObserver();
         final UUID uuid = UUID.randomUUID();
 
-        chatSessionService.sendMessage(uuid, "RandomTestUsername123", "Random Test Message 123", streamObserver);
+        Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
+        String expectedExceptionMessage = "Cannot subscribe. Client not authenticated.";
+
+        assertThatExceptionOfType(expectedExceptionClass)
+                .isThrownBy(() -> chatSessionService.subscribe(uuid, "RandomTestUsername123", streamObserver))
+                .withMessage(expectedExceptionMessage);
+
+        assertEquals(expectedExceptionClass, streamObserver.error.getClass());
+        assertEquals(expectedExceptionMessage, streamObserver.error.getMessage());
     }
 
+    @Test
+    public void unsubscribeNotSubscribedExceptionTest() {
+        final ChatSessionService chatSessionService = new ChatSessionService();
+        final MockStreamObserver streamObserver = new MockStreamObserver();
+        final UUID uuid = UUID.randomUUID();
+
+        Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
+        String expectedExceptionMessage = "Cannot unsubscribe. Client not subscribed.";
+
+        assertThatExceptionOfType(expectedExceptionClass)
+                .isThrownBy(() -> chatSessionService.unsubscribe(uuid, streamObserver))
+                .withMessage(expectedExceptionMessage);
+
+        assertEquals(expectedExceptionClass, streamObserver.error.getClass());
+        assertEquals(expectedExceptionMessage, streamObserver.error.getMessage());
+    }
+
+    @Test
+    public void sendMessageNoSubscriptionExceptionTest() {
+        final ChatSessionService chatSessionService = new ChatSessionService();
+        final MockStreamObserver streamObserver = new MockStreamObserver();
+        final UUID uuid = UUID.randomUUID();
+
+        Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
+        String expectedExceptionMessage = "Cannot send message. ChatSession does not exist.";
+
+        assertThatExceptionOfType(expectedExceptionClass)
+                .isThrownBy(() -> chatSessionService.sendMessage(uuid, "RandomTestUsername123", "Random Test Message 123", streamObserver))
+                .withMessage(expectedExceptionMessage);
+
+        assertEquals(expectedExceptionClass, streamObserver.error.getClass());
+        assertEquals(expectedExceptionMessage, streamObserver.error.getMessage());
+    }
 
     private class MockStreamObserver implements StreamObserver {
-        private boolean onCompletedCalled = false;
         private Object response = null;
+        private Throwable error = null;
+        private boolean onCompletedCalled = false;
 
         @Override
         public void onNext(Object value) {
@@ -110,7 +152,7 @@ public class ChatSessionServiceTest {
 
         @Override
         public void onError(Throwable t) {
-
+            this.error = t;
         }
 
         @Override
