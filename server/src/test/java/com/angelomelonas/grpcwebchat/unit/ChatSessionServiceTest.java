@@ -1,9 +1,8 @@
-package com.angelomelonas.grpcwebchat;
+package com.angelomelonas.grpcwebchat.unit;
 
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.chat.ChatSessionService;
-import io.grpc.stub.StreamObserver;
 import org.junit.Test;
 
 import java.util.UUID;
@@ -138,26 +137,5 @@ public class ChatSessionServiceTest {
 
         assertEquals(expectedExceptionClass, streamObserver.error.getClass());
         assertEquals(expectedExceptionMessage, streamObserver.error.getMessage());
-    }
-
-    private class MockStreamObserver implements StreamObserver {
-        private Object response = null;
-        private Throwable error = null;
-        private boolean onCompletedCalled = false;
-
-        @Override
-        public void onNext(Object value) {
-            this.response = value;
-        }
-
-        @Override
-        public void onError(Throwable t) {
-            this.error = t;
-        }
-
-        @Override
-        public void onCompleted() {
-            onCompletedCalled = true;
-        }
     }
 }

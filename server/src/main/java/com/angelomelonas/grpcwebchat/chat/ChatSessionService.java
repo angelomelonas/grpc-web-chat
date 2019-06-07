@@ -20,7 +20,7 @@ public class ChatSessionService {
     }
 
     public void create(UUID uuid, StreamObserver<AuthenticationResponse> responseObserver) {
-        ChatSession chatSession = new ChatSession(uuid);
+        ChatSession chatSession = new ChatSession();
 
         // Add the ChatSession.
         this.chatSessionHashMap.put(uuid, chatSession);
@@ -45,7 +45,7 @@ public class ChatSessionService {
             throw illegalArgumentException;
         }
 
-        chatSession.subscribe(uuid, username, responseObserver);
+        chatSession.subscribe(username, responseObserver);
 
         final Message clientSubscribed = Message.newBuilder()
                 .setUsername("Server")
@@ -67,7 +67,7 @@ public class ChatSessionService {
             throw illegalArgumentException;
         }
 
-        chatSession.unsubscribe(uuid);
+        chatSession.unsubscribe();
 
         final Message clientUnsubscribed = Message.newBuilder()
                 .setUsername("Server")
@@ -89,7 +89,7 @@ public class ChatSessionService {
         }
 
         // Broadcast the message to everyone.
-        this.chatSessionHashMap.forEach(((id, chatSession) -> chatSession.sendMessage(username, message)));
+        this.chatSessionHashMap.forEach(((id, chatSession) -> chatSession.sendMessage(message)));
 
         final Message messageSent = Message.newBuilder()
                 .setUsername("Server")
