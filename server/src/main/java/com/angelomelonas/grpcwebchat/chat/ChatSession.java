@@ -23,6 +23,8 @@ public class ChatSession {
         this.username = username;
         this.responseObserver = responseObserver;
         this.isSubscribed = true;
+
+        LOGGER.info("Client with username {} subscribed.", this.username);
     }
 
     public void unsubscribe() {
@@ -37,6 +39,8 @@ public class ChatSession {
             throw exception;
         }
         this.isSubscribed = false;
+
+        LOGGER.info("Client with username {} unsubscribed.", this.username);
     }
 
     public void sendMessage(String message) {
@@ -47,7 +51,7 @@ public class ChatSession {
                 .build();
         try {
             this.responseObserver.onNext(newMessage);
-            LOGGER.info("Message sent successfully from user with username {}", this.username);
+            LOGGER.info("Message sent successfully from user with username {}.", this.username);
         } catch (IllegalStateException exception) {
             throw exception;
         } finally {
