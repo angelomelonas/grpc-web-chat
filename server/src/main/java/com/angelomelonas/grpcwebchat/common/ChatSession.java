@@ -1,4 +1,4 @@
-package com.angelomelonas.grpcwebchat.chat;
+package com.angelomelonas.grpcwebchat.common;
 
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import io.grpc.stub.StreamObserver;

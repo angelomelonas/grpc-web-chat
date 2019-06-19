@@ -1,4 +1,4 @@
-package com.angelomelonas.grpcwebchat.grpc;
+package com.angelomelonas.grpcwebchat.api;
 
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationRequest;
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
@@ -7,7 +7,7 @@ import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.ChatServiceGrpc.ChatServiceImplBase;
-import com.angelomelonas.grpcwebchat.chat.ChatSessionService;
+import com.angelomelonas.grpcwebchat.service.ChatSessionService;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
 

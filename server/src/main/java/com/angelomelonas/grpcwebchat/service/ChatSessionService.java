@@ -1,7 +1,8 @@
-package com.angelomelonas.grpcwebchat.chat;
+package com.angelomelonas.grpcwebchat.service;
 
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
+import com.angelomelonas.grpcwebchat.common.ChatSession;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

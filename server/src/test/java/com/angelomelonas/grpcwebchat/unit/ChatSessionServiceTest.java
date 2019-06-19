@@ -2,7 +2,7 @@ package com.angelomelonas.grpcwebchat.unit;
 
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
-import com.angelomelonas.grpcwebchat.chat.ChatSessionService;
+import com.angelomelonas.grpcwebchat.service.ChatSessionService;
 import org.junit.Test;
 
 import java.util.UUID;

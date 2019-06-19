@@ -1,7 +1,7 @@
 package com.angelomelonas.grpcwebchat.unit;
 
 import com.angelomelonas.grpcwebchat.Chat.Message;
-import com.angelomelonas.grpcwebchat.chat.ChatSession;
+import com.angelomelonas.grpcwebchat.common.ChatSession;
 import org.junit.Test;
 
 import java.time.Instant;
