@@ -6,7 +6,6 @@ import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
-import io.grpc.stub.StreamObserver;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -53,23 +52,14 @@ public class ChatServiceTest {
                 .setUsername(username)
                 .build();
 
-        chatServiceTestClient.subscribe(subscriptionRequest, new StreamObserver<Message>() {
-            @Override
-            public void onNext(Message message) {
-                Assert.assertEquals("Client subscribed successfully.", message.getMessage());
-                Assert.assertEquals("Server", message.getUsername());
-            }
+        StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
-            @Override
-            public void onError(Throwable t) {
+        chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+        // Wait for the server to acknowledge the subscription.
+        Message messageResponse = streamObserver.waitForOnNext().get();
 
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
-        });
+        Assert.assertEquals("Server", messageResponse.getUsername());
+        Assert.assertEquals("Client subscribed successfully.", messageResponse.getMessage());
     }
 
     @Test
@@ -84,22 +74,11 @@ public class ChatServiceTest {
                 .setUsername(username)
                 .build();
 
-        chatServiceTestClient.subscribe(subscriptionRequest, new StreamObserver<Message>() {
-            @Override
-            public void onNext(Message value) {
+        StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
-            }
-
-            @Override
-            public void onError(Throwable t) {
-
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
-        });
+        chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+        // Wait for the server to acknowledge the subscription.
+        streamObserver.waitForOnNext();
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -124,31 +103,23 @@ public class ChatServiceTest {
                 .setUsername(username)
                 .build();
 
-        chatServiceTestClient.subscribe(subscriptionRequest, new StreamObserver<Message>() {
-            @Override
-            public void onNext(Message value) {
+        StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
-            }
+        chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+        // Wait for the server to acknowledge the subscription.
+        streamObserver.waitForOnNext();
 
-            @Override
-            public void onError(Throwable t) {
-
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
-        });
         MessageRequest messageRequest = MessageRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
                 .setUsername(username)
                 .setMessage(message)
                 .build();
 
-        Message sendMessageMessage = chatServiceTestClient.sendMessage(messageRequest);
-        Assert.assertEquals("Message sent successfully.", sendMessageMessage.getMessage());
-        Assert.assertEquals("Server", sendMessageMessage.getUsername());
+        // Send the message.
+        Message messageResponse = chatServiceTestClient.sendMessage(messageRequest);
+
+        Assert.assertEquals("Message sent successfully.", messageResponse.getMessage());
+        Assert.assertEquals("Server", messageResponse.getUsername());
     }
 
     @Test
@@ -164,23 +135,11 @@ public class ChatServiceTest {
                 .setUsername(username)
                 .build();
 
-        chatServiceTestClient.subscribe(subscriptionRequest, new StreamObserver<Message>() {
-            @Override
-            public void onNext(Message value) {
-                Assert.assertEquals(message, value.getMessage());
-                Assert.assertEquals(username, value.getUsername());
-            }
+        StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
-            @Override
-            public void onError(Throwable t) {
-
-            }
-
-            @Override
-            public void onCompleted() {
-
-            }
-        });
+        chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+        // Wait for the server to acknowledge the subscription.
+        streamObserver.waitForOnNext();
 
         MessageRequest messageRequest = MessageRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -188,7 +147,14 @@ public class ChatServiceTest {
                 .setMessage(message)
                 .build();
 
+        // Send the message.
         chatServiceTestClient.sendMessage(messageRequest);
+
+        // Wait for the sent message.
+        Message messageResponse = streamObserver.waitForOnNext().get();
+
+        Assert.assertEquals(message, messageResponse.getMessage());
+        Assert.assertEquals(username, messageResponse.getUsername());
     }
 
     private String randomSuffixGenerator() {

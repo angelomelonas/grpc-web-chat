@@ -54,9 +54,6 @@ public class ChatSession {
             LOGGER.info("Message sent successfully from user with username {}.", this.username);
         } catch (IllegalStateException exception) {
             throw exception;
-        } finally {
-            // TODO: Investigate what happens here.
-            this.responseObserver.onCompleted();
         }
     }
 }
