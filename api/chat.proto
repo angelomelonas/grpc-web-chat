@@ -1,33 +1,62 @@
 syntax = "proto3";
 
 package grpcwebchat;
-option java_package = "example.grpcweb.api";
+option java_package = "com.angelomelonas.grpcwebchat";
 
-service Chat {
-    // Server streaming call
+service ChatService {
+
+    rpc Authenticate (AuthenticationRequest) returns (AuthenticationResponse);
+
+    /**
+     * The client subscribes to all messages sent by other clients. Clients can only subscribe if they have been authenticated.
+     * This stream is long-lived and only closed once the client unsubscribes or disconnects.
+     *
+     * Request              SubscriptionRequest containing the client's Identity.
+     * Response (stream)    A long-lived stream of Messages.
+     */
     rpc Subscribe (SubscriptionRequest) returns (stream Message);
 
-    // Unary calls
-    rpc SendMessage (MessageRequest) returns (Message);
-
+    /**
+     * The client unsubscribes from receiving messages.
+     *
+     * Request      SubscriptionRequest containing the client's username.
+     * Response     A Message informing the client it's been unsubscribed.
+     */
     rpc Unsubscribe (UnsubscriptionRequest) returns (Message);
+
+    /**
+     * The client sends a message to all other subscribed clients.
+     *
+     * Request      MessageRequest containing the client's Message.
+     * Response     A Message informing the client it's been unsubscribed.
+     */
+    rpc SendMessage (MessageRequest) returns (Message);
 }
 
-message Message {
-    string message = 1;
-    string username = 2;
-    int64 timestamp = 3;
+message AuthenticationRequest {
 }
 
-message MessageRequest {
-    string message = 1;
-    string username = 2;
+message AuthenticationResponse {
+    string uuid = 1;
 }
 
 message SubscriptionRequest {
-    string username = 1;
+    string uuid = 1;
+    string username = 2;
 }
 
 message UnsubscriptionRequest {
-    string username = 1;
+    string uuid = 1;
+}
+
+message MessageRequest {
+    string uuid = 1;
+    string username = 2;
+    string message = 3;
+}
+
+message Message {
+    string username = 2;
+    string message = 3;
+    int64 timestamp = 4;
 }
