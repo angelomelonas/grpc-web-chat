@@ -29,7 +29,7 @@ public class ChatServiceTestClient {
     }
 
     public void shutdown() throws InterruptedException {
-        managedChannel.shutdown().awaitTermination(2, TimeUnit.SECONDS);
+        managedChannel.shutdown().awaitTermination(3, TimeUnit.SECONDS);
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {

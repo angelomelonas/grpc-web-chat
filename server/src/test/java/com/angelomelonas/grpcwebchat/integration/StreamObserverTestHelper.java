@@ -33,11 +33,6 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
     }
 
     public Optional<T> waitForOnNext() {
-        // Reset the current state.
-//        completed = false;
-//        onNext = false;
-//        results.clear();
-
         try {
             synchronized (onNextLock) {
                 while (!onNext && !completed) {

@@ -14,6 +14,8 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -60,6 +62,12 @@ public class ChatServiceTest {
 
         Assert.assertEquals("Server", messageResponse.getUsername());
         Assert.assertEquals("Client subscribed successfully.", messageResponse.getMessage());
+
+        UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
+                .setUuid(String.valueOf(uuid))
+                .build();
+
+        chatServiceTestClient.unsubscribe(unsubscriptionRequest);
     }
 
     @Test
@@ -120,6 +128,12 @@ public class ChatServiceTest {
 
         Assert.assertEquals("Message sent successfully.", messageResponse.getMessage());
         Assert.assertEquals("Server", messageResponse.getUsername());
+
+        UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
+                .setUuid(String.valueOf(uuid))
+                .build();
+
+        chatServiceTestClient.unsubscribe(unsubscriptionRequest);
     }
 
     @Test
@@ -155,6 +169,89 @@ public class ChatServiceTest {
 
         Assert.assertEquals(message, messageResponse.getMessage());
         Assert.assertEquals(username, messageResponse.getUsername());
+
+        UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
+                .setUuid(String.valueOf(uuid))
+                .build();
+
+        chatServiceTestClient.unsubscribe(unsubscriptionRequest);
+    }
+
+    @Test
+    public void multiClientTest() throws InterruptedException {
+        String[] messagesToSendClient1 = new String[]{"hello user2", "how is the weather", "good cheers"};
+        String[] messagesToSendClient2 = new String[]{"hi user1", "weather is great", "good cheers"};
+
+        int totalMessageCount = messagesToSendClient1.length + messagesToSendClient2.length;
+
+        SimulatedClient client1 = new SimulatedClient(messagesToSendClient1, totalMessageCount);
+        SimulatedClient client2 = new SimulatedClient(messagesToSendClient2, totalMessageCount);
+
+        client1.start();
+        client2.start();
+
+        client1.join();
+        client2.join();
+
+        Assert.assertEquals(totalMessageCount, client1.getReceivedMessages().size());
+        Assert.assertEquals(totalMessageCount, client2.getReceivedMessages().size());
+    }
+
+    private class SimulatedClient extends Thread {
+        private String[] messagesToSend;
+        private final int totalMessageCount;
+        private final StreamObserverTestHelper<Message> streamObserver;
+        private List<Message> receivedMessages;
+
+        SimulatedClient(String[] messagesToSend, int totalMessageCount) {
+            this.messagesToSend = messagesToSend;
+            this.totalMessageCount = totalMessageCount;
+            this.streamObserver = new StreamObserverTestHelper<>();
+            this.receivedMessages = new ArrayList<>();
+        }
+
+        @Override
+        public void run() {
+            AuthenticationResponse authenticationResponse = chatServiceTestClient.authenticate(AuthenticationRequest.newBuilder().build());
+
+            UUID uuid = UUID.fromString(authenticationResponse.getUuid());
+            String username = "TestUsername" + randomSuffixGenerator();
+
+            SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
+                    .setUuid(String.valueOf(uuid))
+                    .setUsername(username)
+                    .build();
+
+            chatServiceTestClient.subscribe(subscriptionRequest, this.streamObserver);
+            // Wait for the server to acknowledge the subscription.
+            this.streamObserver.waitForOnNext();
+
+            // Send all the messages.
+            for (String message : messagesToSend) {
+                MessageRequest messageRequest = MessageRequest.newBuilder()
+                        .setUuid(String.valueOf(uuid))
+                        .setUsername(username)
+                        .setMessage(message)
+                        .build();
+
+                chatServiceTestClient.sendMessage(messageRequest);
+            }
+
+            // Wait for all messages to be received.
+            for (int i = 0; i < totalMessageCount; i++) {
+                this.receivedMessages.add(this.streamObserver.waitForOnNext().get());
+            }
+
+            UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
+                    .setUuid(String.valueOf(uuid))
+                    .build();
+
+            chatServiceTestClient.unsubscribe(unsubscriptionRequest);
+        }
+
+        public List<Message> getReceivedMessages() {
+            return this.receivedMessages;
+        }
     }
 
     private String randomSuffixGenerator() {

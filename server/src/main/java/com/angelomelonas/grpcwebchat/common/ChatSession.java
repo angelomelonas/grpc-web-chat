@@ -44,6 +44,10 @@ public class ChatSession {
     }
 
     public void sendMessage(String message) {
+        if (!this.isSubscribed) {
+            return;
+        }
+
         Message newMessage = Message.newBuilder()
                 .setUsername(this.username)
                 .setMessage(message)
@@ -53,6 +57,7 @@ public class ChatSession {
             this.responseObserver.onNext(newMessage);
             LOGGER.info("Message sent successfully from user with username {}.", this.username);
         } catch (IllegalStateException exception) {
+            LOGGER.error("Send Message Failed", exception);
             throw exception;
         }
     }

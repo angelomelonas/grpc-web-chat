@@ -8,16 +8,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatSessionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatSessionService.class);
 
-    HashMap<UUID, ChatSession> chatSessionHashMap;
+    ConcurrentHashMap<UUID, ChatSession> chatSessionHashMap;
 
     public ChatSessionService() {
-        this.chatSessionHashMap = new HashMap<>();
+        this.chatSessionHashMap = new ConcurrentHashMap<>();
     }
 
     public void create(UUID uuid, StreamObserver<AuthenticationResponse> responseObserver) {
@@ -90,7 +90,9 @@ public class ChatSessionService {
         }
 
         // Broadcast the message to everyone.
-        this.chatSessionHashMap.forEach(((id, chatSession) -> chatSession.sendMessage(message)));
+        this.chatSessionHashMap.forEach(((id, chatSession) -> {
+            chatSession.sendMessage(message);
+        }));
 
         final Message messageSent = Message.newBuilder()
                 .setUsername("Server")
