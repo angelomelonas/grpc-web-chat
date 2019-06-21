@@ -1,12 +1,15 @@
 package com.angelomelonas.grpcwebchat.integration;
 
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class StreamObserverTestHelper<T> implements StreamObserver<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StreamObserverTestHelper.class);
 
     private final Object completeLock = new Object();
     private boolean completed = false;
@@ -24,7 +27,7 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
 
     @Override
     public void onError(Throwable t) {
-
+        LOGGER.error("onError called in StreamObserverTestHelper", t);
     }
 
     @Override

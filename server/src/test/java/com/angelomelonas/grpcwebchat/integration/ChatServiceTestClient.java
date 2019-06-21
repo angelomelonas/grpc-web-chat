@@ -23,7 +23,7 @@ public class ChatServiceTestClient {
     private final ChatServiceStub asyncStub;
 
     public ChatServiceTestClient() {
-        managedChannel = ManagedChannelBuilder.forAddress("localhost", 9090).usePlaintext().build();
+        managedChannel = ManagedChannelBuilder.forAddress("127.0.0.1", 9090).usePlaintext().build();
         blockingStub = ChatServiceGrpc.newBlockingStub(managedChannel);
         asyncStub = ChatServiceGrpc.newStub(managedChannel);
     }

@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatSessionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatSessionService.class);
 
-    ConcurrentHashMap<UUID, ChatSession> chatSessionHashMap;
+    private final ConcurrentHashMap<UUID, ChatSession> chatSessionHashMap;
 
     public ChatSessionService() {
         this.chatSessionHashMap = new ConcurrentHashMap<>();
