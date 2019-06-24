@@ -50,7 +50,7 @@ public class ChatSession {
 
     public synchronized void sendMessage(String message) {
         if (!this.isSubscribed) {
-//            LOGGER.warn("Client not subscribed. Message was not sent.", this.username);
+            LOGGER.warn("Client not subscribed. Message was not sent.", this.username);
             return;
         }
 

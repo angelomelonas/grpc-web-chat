@@ -24,8 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatService extends ChatServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatService.class);
 
-    private final Object lock = new Object();
-
     private final ConcurrentHashMap<UUID, ChatSession> chatSessionHashMap;
 
     public ChatService() {
