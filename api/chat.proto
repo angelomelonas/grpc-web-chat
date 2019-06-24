@@ -4,6 +4,9 @@ package grpcwebchat;
 option java_package = "com.angelomelonas.grpcwebchat";
 
 service ChatService {
+
+    rpc Authenticate (AuthenticationRequest) returns (AuthenticationResponse);
+
     /**
      * The client subscribes to all messages sent by other clients. Clients can only subscribe if they have been authenticated.
      * This stream is long-lived and only closed once the client unsubscribes or disconnects.
@@ -17,33 +20,54 @@ service ChatService {
      * The client unsubscribes from receiving messages.
      *
      * Request      SubscriptionRequest containing the client's username.
-     * Response     A Message informing the client it's been unsubscribed.
+     * Response     A UnsubscriptionResponse informing the client it's been successfully unsubscribed.
      */
-    rpc Unsubscribe (SubscriptionRequest) returns (Message);
+    rpc Unsubscribe (UnsubscriptionRequest) returns (UnsubscriptionResponse);
 
     /**
      * The client sends a message to all other subscribed clients.
      *
      * Request      MessageRequest containing the client's Message.
-     * Response     A Message informing the client it's been unsubscribed.
+     * Response     A MessageResponse informing the client if it's message has been sent successfully.
      */
-    rpc SendMessage (MessageRequest) returns (Message);
+    rpc SendMessage (MessageRequest) returns (MessageResponse);
+}
+
+message AuthenticationRequest {
+}
+
+message AuthenticationResponse {
+    string uuid = 1;
 }
 
 message SubscriptionRequest {
-    Identity identity = 1;
+    string uuid = 1;
+    string username = 2;
+}
+
+message UnsubscriptionRequest {
+    string uuid = 1;
+}
+
+message UnsubscriptionResponse {
+    string uuid = 1;
+    string message = 2;
 }
 
 message MessageRequest {
-    string Message = 1;
+    string uuid = 1;
+    string username = 2;
+    string message = 3;
 }
 
-message Identity {
-    string username = 1;
+message MessageResponse {
+    string uuid = 1;
+    string message = 2;
 }
 
 message Message {
-    Identity identity = 1;
-    string message = 2;
-    int64 timestamp = 3;
+    string uuid = 1;
+    string username = 2;
+    string message = 3;
+    int64 timestamp = 4;
 }
