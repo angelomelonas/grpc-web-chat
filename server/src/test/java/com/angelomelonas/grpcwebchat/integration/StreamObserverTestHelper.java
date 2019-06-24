@@ -4,8 +4,6 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class StreamObserverTestHelper<T> implements StreamObserver<T> {
@@ -13,7 +11,6 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
 
     private final Object completeLock = new Object();
     private boolean completed = false;
-    private final List<T> results = new ArrayList<>();
     private Optional<T> result = Optional.empty();
     private final Object onNextLock = new Object();
     private boolean onNext = false;
@@ -21,7 +18,6 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
     @Override
     public void onNext(T value) {
         result = Optional.ofNullable(value);
-        results.add(value);
         notifyOnNext();
     }
 
@@ -36,6 +32,23 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
     }
 
     public Optional<T> waitForOnNext() {
+        try {
+            synchronized (onNextLock) {
+                while (!onNext && !completed) {
+                    onNextLock.wait(100);
+                }
+                this.onNext = false;
+                if (completed) {
+                    throw new IllegalArgumentException("Did not get an onNext but an onCompleted.");
+                }
+            }
+            return result;
+        } catch (Throwable e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public Optional<T> waitForOnNextN() {
         try {
             synchronized (onNextLock) {
                 while (!onNext && !completed) {
@@ -66,12 +79,7 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
         return result;
     }
 
-    public List<T> getResults() {
-        return results;
-    }
-
-
-    protected void notifyOnNext() {
+    private void notifyOnNext() {
         synchronized (onNextLock) {
             onNext = true;
             onNextLock.notify();

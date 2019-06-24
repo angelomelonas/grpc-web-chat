@@ -4,8 +4,10 @@ import com.angelomelonas.grpcwebchat.Chat.AuthenticationRequest;
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
+import com.angelomelonas.grpcwebchat.Chat.MessageResponse;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
+import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -26,7 +28,7 @@ public class ChatServiceTest {
     private ChatServiceTestClient chatServiceTestClient;
 
     @Before
-    public void resetChatClient() {
+    public void ChatServiceTestClient() {
         chatServiceTestClient = new ChatServiceTestClient();
     }
 
@@ -58,10 +60,11 @@ public class ChatServiceTest {
 
         chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
         // Wait for the server to acknowledge the subscription.
-        Message messageResponse = streamObserver.waitForOnNext().get();
+        Message subscriptionResponse = streamObserver.waitForOnNext().get();
 
-        Assert.assertEquals("Server", messageResponse.getUsername());
-        Assert.assertEquals("Client subscribed successfully.", messageResponse.getMessage());
+        Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
+        Assert.assertEquals("Server", subscriptionResponse.getUsername());
+        Assert.assertEquals("Client subscribed successfully.", subscriptionResponse.getMessage());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -92,10 +95,12 @@ public class ChatServiceTest {
                 .setUuid(String.valueOf(uuid))
                 .build();
 
-        Message unsubscribeMessage = chatServiceTestClient.unsubscribe(unsubscriptionRequest);
+        UnsubscriptionResponse unsubscriptionResponse = chatServiceTestClient.unsubscribe(unsubscriptionRequest);
 
-        Assert.assertEquals("You have successfully been unsubscribed", unsubscribeMessage.getMessage());
-        Assert.assertEquals("Server", unsubscribeMessage.getUsername());
+        Assert.assertEquals(String.valueOf(uuid), unsubscriptionResponse.getUuid());
+        Assert.assertEquals("You have successfully been unsubscribed", unsubscriptionResponse.getMessage());
+
+        streamObserver.waitForOnCompleted();
     }
 
     @Test
@@ -114,8 +119,13 @@ public class ChatServiceTest {
         StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
         chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+
         // Wait for the server to acknowledge the subscription.
-        streamObserver.waitForOnNext();
+        Message subscriptionResponse = streamObserver.waitForOnNext().get();
+
+        Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
+        Assert.assertEquals("Server", subscriptionResponse.getUsername());
+        Assert.assertEquals("Client subscribed successfully.", subscriptionResponse.getMessage());
 
         MessageRequest messageRequest = MessageRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -124,16 +134,18 @@ public class ChatServiceTest {
                 .build();
 
         // Send the message.
-        Message messageResponse = chatServiceTestClient.sendMessage(messageRequest);
+        MessageResponse messageResponse = chatServiceTestClient.sendMessage(messageRequest);
 
+        Assert.assertEquals(String.valueOf(uuid), messageResponse.getUuid());
         Assert.assertEquals("Message sent successfully.", messageResponse.getMessage());
-        Assert.assertEquals("Server", messageResponse.getUsername());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
                 .build();
 
         chatServiceTestClient.unsubscribe(unsubscriptionRequest);
+
+        streamObserver.waitForOnCompleted();
     }
 
     @Test
@@ -152,8 +164,13 @@ public class ChatServiceTest {
         StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
         chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+
         // Wait for the server to acknowledge the subscription.
-        streamObserver.waitForOnNext();
+        Message subscriptionResponse = streamObserver.waitForOnNext().get();
+
+        Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
+        Assert.assertEquals("Server", subscriptionResponse.getUsername());
+        Assert.assertEquals("Client subscribed successfully.", subscriptionResponse.getMessage());
 
         MessageRequest messageRequest = MessageRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -165,16 +182,19 @@ public class ChatServiceTest {
         chatServiceTestClient.sendMessage(messageRequest);
 
         // Wait for the sent message.
-        Message messageResponse = streamObserver.waitForOnNext().get();
+        Message receivedMessage = streamObserver.waitForOnNext().get(); // TODO: Sometimes receive Client Subscribed Successfully.
 
-        Assert.assertEquals(message, messageResponse.getMessage());
-        Assert.assertEquals(username, messageResponse.getUsername());
+        Assert.assertEquals(String.valueOf(uuid), receivedMessage.getUuid());
+        Assert.assertEquals(message, receivedMessage.getMessage());
+        Assert.assertEquals(username, receivedMessage.getUsername());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
                 .build();
 
         chatServiceTestClient.unsubscribe(unsubscriptionRequest);
+
+        streamObserver.waitForOnCompleted();
     }
 
     @Test
@@ -223,6 +243,7 @@ public class ChatServiceTest {
                     .build();
 
             chatServiceTestClient.subscribe(subscriptionRequest, this.streamObserver);
+
             // Wait for the server to acknowledge the subscription.
             this.streamObserver.waitForOnNext();
 
@@ -239,7 +260,7 @@ public class ChatServiceTest {
 
             // Wait for all messages to be received.
             for (int i = 0; i < totalMessageCount; i++) {
-                this.receivedMessages.add(this.streamObserver.waitForOnNext().get());
+                this.receivedMessages.add(this.streamObserver.waitForOnNextN().get());
             }
 
             UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()

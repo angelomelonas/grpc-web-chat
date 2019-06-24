@@ -4,8 +4,10 @@ import com.angelomelonas.grpcwebchat.Chat.AuthenticationRequest;
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
+import com.angelomelonas.grpcwebchat.Chat.MessageResponse;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
+import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
 import com.angelomelonas.grpcwebchat.ChatServiceGrpc;
 import com.angelomelonas.grpcwebchat.ChatServiceGrpc.ChatServiceBlockingStub;
 import com.angelomelonas.grpcwebchat.ChatServiceGrpc.ChatServiceStub;
@@ -40,13 +42,11 @@ public class ChatServiceTestClient {
         asyncStub.subscribe(subscriptionRequest, responseObserver);
     }
 
-
-    public Message unsubscribe(UnsubscriptionRequest unsubscriptionRequest) {
+    public UnsubscriptionResponse unsubscribe(UnsubscriptionRequest unsubscriptionRequest) {
         return blockingStub.unsubscribe(unsubscriptionRequest);
     }
 
-
-    public Message sendMessage(MessageRequest messageRequest) {
+    public MessageResponse sendMessage(MessageRequest messageRequest) {
         return blockingStub.sendMessage(messageRequest);
     }
 }

@@ -5,6 +5,7 @@ import com.angelomelonas.grpcwebchat.common.ChatSession;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
@@ -17,6 +18,7 @@ public class ChatSessionTest {
         ChatSession chatSession = new ChatSession();
         MockStreamObserver streamObserver = new MockStreamObserver();
 
+        UUID sessionId = UUID.randomUUID();
         String username = "RandomTestUsername123";
         String message = "Random Test Message 123";
         Message expectedMessageResponse = Message.newBuilder()
@@ -25,7 +27,7 @@ public class ChatSessionTest {
                 .setTimestamp(Instant.now().toEpochMilli())
                 .build();
 
-        chatSession.subscribe(username, streamObserver);
+        chatSession.subscribe(sessionId, username, streamObserver);
         chatSession.sendMessage(message);
 
         assertEquals(expectedMessageResponse.getMessage(), ((Message) streamObserver.response).getMessage());
@@ -46,5 +48,4 @@ public class ChatSessionTest {
                 .isThrownBy(() -> chatSession.unsubscribe())
                 .withMessage(expectedExceptionMessage);
     }
-
 }
