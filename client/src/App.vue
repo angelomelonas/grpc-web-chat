@@ -32,6 +32,9 @@ export default class App extends Vue {
     // On app creation, connect to the gRPC server.
     chat.connectClient({ hostname: "localhost", port: 8080 });
 
+    // Authenticate the client.
+    chat.authenticate();
+
     // If the window is closed or reloaded, unsubscribe.
     window.addEventListener("beforeunload", this.onClose);
   }

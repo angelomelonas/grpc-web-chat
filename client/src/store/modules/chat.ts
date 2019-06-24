@@ -6,12 +6,15 @@ import {
   VuexModule
 } from "vuex-module-decorators";
 import store from "@/store";
-import { ChatClient } from "../../../proto/chat_grpc_web_pb";
+import { ChatServiceClient } from "../../../proto/chat_grpc_web_pb";
 import {
-  Message,
+  AuthenticationRequest,
+  AuthenticationResponse,
   MessageRequest,
+  MessageResponse,
   SubscriptionRequest,
-  UnsubscriptionRequest
+  UnsubscriptionRequest,
+  UnsubscriptionResponse
 } from "../../../proto/chat_pb";
 import * as grpcWeb from "grpc-web";
 import moment from "moment";
@@ -23,11 +26,16 @@ import moment from "moment";
   dynamic: true
 })
 class ChatModule extends VuexModule {
-  chatClient!: ChatClient;
+  chatServiceClient!: ChatServiceClient;
 
+  sessionId: string = "";
   subscribed: boolean = false;
   username: string = "";
   messages: string = "";
+
+  get getSessionId(): string {
+    return this.sessionId;
+  }
 
   get getUsername(): string {
     return this.username;
@@ -42,8 +50,8 @@ class ChatModule extends VuexModule {
   }
 
   @Mutation
-  setUsername(username: string) {
-    this.username = username;
+  setSessionId(sessionId: string) {
+    this.sessionId = sessionId;
   }
 
   @Mutation
@@ -52,27 +60,45 @@ class ChatModule extends VuexModule {
   }
 
   @Mutation
-  appendMessage(data: Message) {
-    if (data) {
-      this.messages +=
-        "[" +
-        moment(data.getTimestamp()).format("LTS") +
-        "] " +
-        data.getUsername() +
-        ": " +
-        data.getMessage() +
-        "\n";
-    } else {
-      this.messages += "ERROR: Message not delivered" + "\n";
-    }
+  setUsername(username: string) {
+    this.username = username;
+  }
+
+  @Mutation
+  appendMessage(timestamp: number, username: string, message: string) {
+    this.messages +=
+      "[" +
+      moment(timestamp).format("LTS") +
+      "] " +
+      username +
+      ": " +
+      message +
+      "\n";
   }
 
   @Action
   connectClient(host: { hostname: string; port: number }) {
-    this.chatClient = new ChatClient(
+    this.chatServiceClient = new ChatServiceClient(
       "http://" + host.hostname + ":" + host.port,
       null,
       null
+    );
+  }
+
+  @Action
+  authenticate() {
+    const authenticationRequest = new AuthenticationRequest();
+
+    this.chatServiceClient.authenticate(
+      authenticationRequest,
+      {},
+      (err: grpcWeb.Error, authenticationResponse: AuthenticationResponse) => {
+        if (!err) {
+          this.setSessionId(authenticationResponse.getUuid());
+        } else {
+          console.error(err);
+        }
+      }
     );
   }
 
@@ -81,33 +107,46 @@ class ChatModule extends VuexModule {
     const subscriptionRequest = new SubscriptionRequest();
     subscriptionRequest.setUsername(this.username);
 
-    this.chatClient.subscribe(subscriptionRequest).on("data", data => {
-      if (!data.getMessage().includes("Error")) {
-        console.log("User has subscribed: " + this.username);
+    this.chatServiceClient
+      .subscribe(subscriptionRequest)
+      .on("data", message => {
         this.setSubscription(true);
-      }
-      this.appendMessage(data);
-    });
+        this.appendMessage(
+          message.getTimestamp(),
+          message.getUsername(),
+          message.getMessage()
+        );
+      })
+      .on("error", error => {
+        this.setSubscription(false);
+        console.error(error);
+      })
+      .on("end", () => {
+        console.log("Chat session closed.");
+      });
   }
 
   @Action
-  someAction() {}
-
-  @Action
   unsubscribe() {
-    if (!this.isSubscribed) {
-      return;
-    }
-    console.log("User has unsubscribed: " + this.username);
-
     const unsubscriptionRequest = new UnsubscriptionRequest();
-    unsubscriptionRequest.setUsername(this.username);
+    unsubscriptionRequest.setUuid(this.getSessionId);
 
-    this.chatClient.unsubscribe(
+    this.chatServiceClient.unsubscribe(
       unsubscriptionRequest,
       {},
-      (err: grpcWeb.Error, message: Message) => {
-        this.setSubscription(false);
+      (err: grpcWeb.Error, unsubscriptionResponse: UnsubscriptionResponse) => {
+        if (unsubscriptionResponse) {
+          this.appendMessage(
+            moment().unix(),
+            "Server",
+            unsubscriptionResponse.getMessage()
+          );
+          this.setSubscription(false);
+          console.log("Client has been unsubscribed.");
+        }
+        if (err) {
+          console.error(err);
+        }
       }
     );
   }
@@ -119,15 +158,16 @@ class ChatModule extends VuexModule {
     messageRequest.setUsername(this.username);
     messageRequest.setMessage(message);
 
-    this.chatClient.sendMessage(
+    this.chatServiceClient.sendMessage(
       messageRequest,
       {},
-      (err: grpcWeb.Error, message: Message) => {
-        if (message) {
-          // Log errors or messages here.
-          console.log("Message received: " + message.getMessage());
-        } else {
-          console.error("An error has occurred.");
+      (err: grpcWeb.Error, messageResponse: MessageResponse) => {
+        if (messageResponse) {
+          console.log("Message received: " + messageResponse.getMessage());
+        }
+
+        if (err) {
+          console.error(err);
         }
       }
     );
