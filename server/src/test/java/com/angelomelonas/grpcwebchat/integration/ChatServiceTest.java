@@ -98,7 +98,7 @@ public class ChatServiceTest {
         UnsubscriptionResponse unsubscriptionResponse = chatServiceTestClient.unsubscribe(unsubscriptionRequest);
 
         Assert.assertEquals(String.valueOf(uuid), unsubscriptionResponse.getUuid());
-        Assert.assertEquals("You have successfully been unsubscribed", unsubscriptionResponse.getMessage());
+        Assert.assertEquals("Client successfully unsubscribed.", unsubscriptionResponse.getMessage());
 
         streamObserver.waitForOnCompleted();
     }
@@ -199,22 +199,27 @@ public class ChatServiceTest {
 
     @Test
     public void multiClientTest() throws InterruptedException {
-        String[] messagesToSendClient1 = new String[]{"hello user2", "how is the weather", "good cheers"};
-        String[] messagesToSendClient2 = new String[]{"hi user1", "weather is great", "good cheers"};
+        String[] messagesToSendClient1 = new String[]{"Hello", "How are you?", "Great, thanks"};
+        String[] messagesToSendClient2 = new String[]{"Hi", "Good thanks, and you?", "Cool"};
+        String[] messagesToSendClient3 = new String[]{"Yo", "Alright", "Yeah"};
 
-        int totalMessageCount = messagesToSendClient1.length + messagesToSendClient2.length;
+        int totalMessageCount = messagesToSendClient1.length + messagesToSendClient2.length + messagesToSendClient3.length;
 
         SimulatedClient client1 = new SimulatedClient(messagesToSendClient1, totalMessageCount);
         SimulatedClient client2 = new SimulatedClient(messagesToSendClient2, totalMessageCount);
+        SimulatedClient client3 = new SimulatedClient(messagesToSendClient3, totalMessageCount);
 
         client1.start();
         client2.start();
+        client3.start();
 
         client1.join();
         client2.join();
+        client3.join();
 
         Assert.assertEquals(totalMessageCount, client1.getReceivedMessages().size());
         Assert.assertEquals(totalMessageCount, client2.getReceivedMessages().size());
+        Assert.assertEquals(totalMessageCount, client3.getReceivedMessages().size());
     }
 
     private class SimulatedClient extends Thread {

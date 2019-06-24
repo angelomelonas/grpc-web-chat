@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatService extends ChatServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatService.class);
 
+    private final Object lock = new Object();
+
     private final ConcurrentHashMap<UUID, ChatSession> chatSessionHashMap;
 
     public ChatService() {
@@ -58,6 +60,7 @@ public class ChatService extends ChatServiceImplBase {
         if (chatSession == null) {
             IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot subscribe. Client not authenticated.");
             responseObserver.onError(illegalArgumentException);
+            LOGGER.error("Chat Session was null while trying to subscribe.", illegalArgumentException);
             return;
         }
 
@@ -83,6 +86,7 @@ public class ChatService extends ChatServiceImplBase {
 
         if (chatSession == null) {
             IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot unsubscribe. Client not subscribed.");
+            LOGGER.error("Chat Session was null while trying to unsubscribe.", illegalArgumentException);
             responseObserver.onError(illegalArgumentException);
             return;
         }
@@ -91,7 +95,7 @@ public class ChatService extends ChatServiceImplBase {
 
         final UnsubscriptionResponse unsubscriptionResponse = UnsubscriptionResponse.newBuilder()
                 .setUuid(request.getUuid())
-                .setMessage("You have successfully been unsubscribed")
+                .setMessage("Client successfully unsubscribed.")
                 .build();
 
         responseObserver.onNext(unsubscriptionResponse);
@@ -108,10 +112,8 @@ public class ChatService extends ChatServiceImplBase {
         ChatSession currentClientChatSession = this.chatSessionHashMap.get(chatSessionId);
 
         if (currentClientChatSession == null) {
-            IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot send message. ChatSession does not exist.");
-            throw illegalArgumentException;
+            throw new IllegalArgumentException("Cannot send message. ChatSession does not exist.");
         }
-//        this.chatSessionHashMap.entrySet().removeIf(entry -> !entry.getValue().isSubscribed());
 
         try {
             // Respond to the client which sent the message.
@@ -121,7 +123,7 @@ public class ChatService extends ChatServiceImplBase {
             HashMap<UUID, ChatSession> temp = new HashMap<>(this.chatSessionHashMap);
 
             temp.forEach(((id, chatSession) -> {
-                if (!id.equals(chatSessionId)) {
+                if (chatSession != null && !id.equals(chatSessionId)) {
                     chatSession.sendMessage(message);
                 }
             }));

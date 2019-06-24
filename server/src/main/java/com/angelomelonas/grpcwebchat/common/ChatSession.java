@@ -36,15 +36,14 @@ public class ChatSession {
         }
 
         try {
-
             // Try to close the stream.
             this.responseObserver.onCompleted();
         } catch (IllegalStateException exception) {
             LOGGER.error("An error was thrown while trying to unsubscribe user with username {}", this.username, exception);
-            this.isSubscribed = false;
             throw exception;
+        } finally {
+            this.isSubscribed = false;
         }
-        this.isSubscribed = false;
 
         LOGGER.info("Client with username {} unsubscribed.", this.username);
     }
