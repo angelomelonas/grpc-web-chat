@@ -35,8 +35,8 @@ public class ChatServiceTest {
         final ChatService chatService = new ChatService();
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "Server";
-        final String message = "Client subscribed successfully.";
+        final String username = "RandomUsername123";
+        final String message = "User " + username + " has subscribed.";
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
 
@@ -46,13 +46,13 @@ public class ChatServiceTest {
 
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
                 .setUuid(authenticationResponse.getUuid())
-                .setUsername("Random Username 123")
+                .setUsername(username)
                 .build();
 
         chatService.subscribe(subscriptionRequest, streamObserver);
 
         final Message expectedMessageResponse = Message.newBuilder()
-                .setUsername(username)
+                .setUsername("Server")
                 .setMessage(message)
                 .build();
 
@@ -66,7 +66,8 @@ public class ChatServiceTest {
         final ChatService chatService = new ChatService();
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String message = "Client successfully unsubscribed.";
+        final String username = "RandomUsername123";
+        final String message = "User " + username + " has unsubscribed.";
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
 
@@ -76,7 +77,7 @@ public class ChatServiceTest {
 
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
                 .setUuid(authenticationResponse.getUuid())
-                .setUsername("Random Username 123")
+                .setUsername(username)
                 .build();
 
         chatService.subscribe(subscriptionRequest, streamObserver);

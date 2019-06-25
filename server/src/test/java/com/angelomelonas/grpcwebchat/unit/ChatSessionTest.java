@@ -15,10 +15,10 @@ public class ChatSessionTest {
 
     @Test
     public void sendMessageTest() {
-        ChatSession chatSession = new ChatSession();
+        UUID sessionId = UUID.randomUUID();
+        ChatSession chatSession = new ChatSession(sessionId);
         MockStreamObserver streamObserver = new MockStreamObserver();
 
-        UUID sessionId = UUID.randomUUID();
         String username = "RandomTestUsername123";
         String message = "Random Test Message 123";
         Message expectedMessageResponse = Message.newBuilder()
@@ -27,8 +27,8 @@ public class ChatSessionTest {
                 .setTimestamp(Instant.now().toEpochMilli())
                 .build();
 
-        chatSession.subscribe(sessionId, username, streamObserver);
-        chatSession.sendMessage(message);
+        chatSession.subscribe(username, streamObserver);
+        chatSession.sendMessage(sessionId, username, message);
 
         assertEquals(expectedMessageResponse.getMessage(), ((Message) streamObserver.response).getMessage());
         assertEquals(expectedMessageResponse.getUsername(), ((Message) streamObserver.response).getUsername());
@@ -39,7 +39,8 @@ public class ChatSessionTest {
 
     @Test
     public void unsubscribeNoSubscriptionExceptionTest() {
-        ChatSession chatSession = new ChatSession();
+        UUID sessionId = UUID.randomUUID();
+        ChatSession chatSession = new ChatSession(sessionId);
 
         Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
         String expectedExceptionMessage = "Cannot unsubscribe. Session not subscribed.";

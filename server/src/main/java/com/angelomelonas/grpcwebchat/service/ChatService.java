@@ -32,8 +32,8 @@ public class ChatService extends ChatServiceImplBase {
 
     @Override
     public void authenticate(AuthenticationRequest request, StreamObserver<AuthenticationResponse> responseObserver) {
-        ChatSession chatSession = new ChatSession();
         UUID newChatSessionId = UUID.randomUUID();
+        ChatSession chatSession = new ChatSession(newChatSessionId);
 
         // Add the ChatSession.
         this.chatSessionHashMap.put(newChatSessionId, chatSession);
@@ -45,8 +45,6 @@ public class ChatService extends ChatServiceImplBase {
         // Respond with the newly generated UUID.
         responseObserver.onNext(authenticationResponse);
         responseObserver.onCompleted();
-
-        LOGGER.info("ChatSession with UUID {} created.", newChatSessionId);
     }
 
     @Override
@@ -62,18 +60,16 @@ public class ChatService extends ChatServiceImplBase {
             return;
         }
 
-        chatSession.subscribe(chatSessionId, request.getUsername(), responseObserver);
+        chatSession.subscribe(request.getUsername(), responseObserver);
 
         final Message clientSubscribed = Message.newBuilder()
                 .setUuid(request.getUuid())
                 .setUsername("Server")
-                .setMessage("Client subscribed successfully.")
+                .setMessage("User " + chatSession.getUsername() + " has subscribed.")
                 .setTimestamp(Instant.now().toEpochMilli())
                 .build();
 
         responseObserver.onNext(clientSubscribed);
-
-        LOGGER.info("ChatSession with UUID {} and username {} subscribed.", chatSessionId, chatSession.getUsername());
     }
 
     @Override
@@ -93,40 +89,32 @@ public class ChatService extends ChatServiceImplBase {
 
         final UnsubscriptionResponse unsubscriptionResponse = UnsubscriptionResponse.newBuilder()
                 .setUuid(request.getUuid())
-                .setMessage("Client successfully unsubscribed.")
+                .setMessage("User " + chatSession.getUsername() + " has unsubscribed.")
                 .build();
 
         responseObserver.onNext(unsubscriptionResponse);
         responseObserver.onCompleted();
-
-        LOGGER.info("ChatSession with UUID {} unsubscribed.", chatSessionId);
     }
 
     @Override
     public void sendMessage(MessageRequest request, StreamObserver<MessageResponse> responseObserver) {
-        UUID chatSessionId = UUID.fromString(request.getUuid());
-        String message = request.getMessage();
+        UUID senderSessionId = UUID.fromString(request.getUuid());
 
-        ChatSession currentClientChatSession = this.chatSessionHashMap.get(chatSessionId);
+        ChatSession currentClientChatSession = this.chatSessionHashMap.get(senderSessionId);
 
         if (currentClientChatSession == null) {
             throw new IllegalArgumentException("Cannot send message. ChatSession does not exist.");
         }
 
         try {
-            // Respond to the client which sent the message.
-            currentClientChatSession.sendMessage(message);
-
-            // Broadcast the message to everyone.
+            // Broadcast the message to everyone, including the client which sent the message.
             HashMap<UUID, ChatSession> temp = new HashMap<>(this.chatSessionHashMap);
 
             temp.forEach(((id, chatSession) -> {
-                if (chatSession != null && !id.equals(chatSessionId)) {
-                    chatSession.sendMessage(message);
+                if (chatSession != null) {
+                    chatSession.sendMessage(senderSessionId, currentClientChatSession.getUsername(), request.getMessage());
                 }
             }));
-
-            LOGGER.info("Client with username {} sent a message.", currentClientChatSession.getUsername());
         } catch (Throwable throwable) {
             LOGGER.error("Exception while sending message.", throwable);
             responseObserver.onError(throwable);

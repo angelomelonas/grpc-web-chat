@@ -17,12 +17,13 @@ public class ChatSession {
 
     private boolean isSubscribed;
 
-    public ChatSession() {
+    public ChatSession(UUID sessionId) {
+        this.sessionId = sessionId;
         this.isSubscribed = false;
+        LOGGER.info("ChatSession with UUID {} has been created.", sessionId);
     }
 
-    public synchronized void subscribe(UUID sessionId, String username, StreamObserver responseObserver) {
-        this.sessionId = sessionId;
+    public synchronized void subscribe(String username, StreamObserver responseObserver) {
         this.username = username;
         this.responseObserver = responseObserver;
         this.isSubscribed = true;
@@ -48,15 +49,15 @@ public class ChatSession {
         LOGGER.info("Client with username {} unsubscribed.", this.username);
     }
 
-    public synchronized void sendMessage(String message) {
+    public synchronized void sendMessage(UUID senderId, String username, String message) {
         if (!this.isSubscribed) {
             LOGGER.warn("Client not subscribed. Message was not sent.", this.username);
             return;
         }
 
         Message newMessage = Message.newBuilder()
-                .setUuid(String.valueOf(this.sessionId))
-                .setUsername(this.username)
+                .setUuid(String.valueOf(senderId))
+                .setUsername(username)
                 .setMessage(message)
                 .setTimestamp(Instant.now().toEpochMilli())
                 .build();
