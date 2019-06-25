@@ -40,11 +40,15 @@ export default class App extends Vue {
   }
 
   private destroyed(): void {
-    chat.unsubscribe();
+    if (chat.isSubscribed) {
+      chat.unsubscribe();
+    }
   }
 
   private onClose(): void {
-    chat.unsubscribe();
+    if (chat.isSubscribed) {
+      chat.unsubscribe();
+    }
   }
 }
 </script>
