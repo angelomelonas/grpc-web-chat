@@ -10,6 +10,7 @@ import { ChatServiceClient } from "../../../proto/chat_grpc_web_pb";
 import {
   AuthenticationRequest,
   AuthenticationResponse,
+  Message,
   MessageRequest,
   MessageResponse,
   SubscriptionRequest,
@@ -65,14 +66,18 @@ class ChatModule extends VuexModule {
   }
 
   @Mutation
-  appendMessage(timestamp: number, username: string, message: string) {
+  appendMessage(message: {
+    timestamp: number;
+    username: string;
+    message: string;
+  }) {
     this.messages +=
       "[" +
-      moment(timestamp).format("LTS") +
+      moment(message.timestamp).format("LTS") +
       "] " +
-      username +
+      message.username +
       ": " +
-      message +
+      message.message +
       "\n";
   }
 
@@ -105,19 +110,21 @@ class ChatModule extends VuexModule {
   @Action
   subscribe() {
     const subscriptionRequest = new SubscriptionRequest();
-    subscriptionRequest.setUsername(this.username);
+
+    subscriptionRequest.setUuid(this.getSessionId);
+    subscriptionRequest.setUsername(this.getUsername);
 
     this.chatServiceClient
       .subscribe(subscriptionRequest)
-      .on("data", message => {
+      .on("data", (message: Message) => {
         this.setSubscription(true);
-        this.appendMessage(
-          message.getTimestamp(),
-          message.getUsername(),
-          message.getMessage()
-        );
+        this.appendMessage({
+          timestamp: message.getTimestamp(),
+          username: message.getUsername(),
+          message: message.getMessage()
+        });
       })
-      .on("error", error => {
+      .on("error", (error: grpcWeb.Error) => {
         this.setSubscription(false);
         console.error(error);
       })
@@ -136,13 +143,12 @@ class ChatModule extends VuexModule {
       {},
       (err: grpcWeb.Error, unsubscriptionResponse: UnsubscriptionResponse) => {
         if (unsubscriptionResponse) {
-          this.appendMessage(
-            moment().unix(),
-            "Server",
-            unsubscriptionResponse.getMessage()
-          );
           this.setSubscription(false);
-          console.log("Client has been unsubscribed.");
+          this.appendMessage({
+            timestamp: moment().unix(),
+            username: "Server",
+            message: unsubscriptionResponse.getMessage()
+          });
         }
         if (err) {
           console.error(err);
@@ -155,7 +161,8 @@ class ChatModule extends VuexModule {
   sendMessage(message: string) {
     const messageRequest = new MessageRequest();
 
-    messageRequest.setUsername(this.username);
+    messageRequest.setUuid(this.getSessionId);
+    messageRequest.setUsername(this.getUsername);
     messageRequest.setMessage(message);
 
     this.chatServiceClient.sendMessage(
