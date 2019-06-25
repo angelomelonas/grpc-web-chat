@@ -64,7 +64,7 @@ public class ChatServiceTest {
 
         Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
         Assert.assertEquals("Server", subscriptionResponse.getUsername());
-        Assert.assertEquals("Client subscribed successfully.", subscriptionResponse.getMessage());
+        Assert.assertEquals("User " + username + " has subscribed.", subscriptionResponse.getMessage());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -98,7 +98,7 @@ public class ChatServiceTest {
         UnsubscriptionResponse unsubscriptionResponse = chatServiceTestClient.unsubscribe(unsubscriptionRequest);
 
         Assert.assertEquals(String.valueOf(uuid), unsubscriptionResponse.getUuid());
-        Assert.assertEquals("Client successfully unsubscribed.", unsubscriptionResponse.getMessage());
+        Assert.assertEquals("User " + username + " has unsubscribed.", unsubscriptionResponse.getMessage());
 
         streamObserver.waitForOnCompleted();
     }
@@ -121,11 +121,7 @@ public class ChatServiceTest {
         chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
 
         // Wait for the server to acknowledge the subscription.
-        Message subscriptionResponse = streamObserver.waitForOnNext().get();
-
-        Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
-        Assert.assertEquals("Server", subscriptionResponse.getUsername());
-        Assert.assertEquals("Client subscribed successfully.", subscriptionResponse.getMessage());
+        streamObserver.waitForOnNext().get();
 
         MessageRequest messageRequest = MessageRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -166,11 +162,7 @@ public class ChatServiceTest {
         chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
 
         // Wait for the server to acknowledge the subscription.
-        Message subscriptionResponse = streamObserver.waitForOnNext().get();
-
-        Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
-        Assert.assertEquals("Server", subscriptionResponse.getUsername());
-        Assert.assertEquals("Client subscribed successfully.", subscriptionResponse.getMessage());
+        streamObserver.waitForOnNext().get();
 
         MessageRequest messageRequest = MessageRequest.newBuilder()
                 .setUuid(String.valueOf(uuid))
@@ -182,7 +174,7 @@ public class ChatServiceTest {
         chatServiceTestClient.sendMessage(messageRequest);
 
         // Wait for the sent message.
-        Message receivedMessage = streamObserver.waitForOnNext().get(); // TODO: Sometimes receive Client Subscribed Successfully.
+        Message receivedMessage = streamObserver.waitForOnNext().get();
 
         Assert.assertEquals(String.valueOf(uuid), receivedMessage.getUuid());
         Assert.assertEquals(message, receivedMessage.getMessage());
