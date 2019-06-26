@@ -34,6 +34,11 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -42,6 +47,14 @@
             <groupId>io.github.lognet</groupId>
             <artifactId>grpc-spring-boot-starter</artifactId>
             <version>3.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <!-- See: https://stackoverflow.com/q/55349373 -->
+            <version>1.4.193</version>
+            <scope>runtime</scope>
         </dependency>
 
     </dependencies>
