@@ -1,4 +1,4 @@
-package com.angelomelonas.grpcwebchat.unit;
+package com.angelomelonas.grpcwebchat.unit.service;
 
 import io.grpc.stub.StreamObserver;
 

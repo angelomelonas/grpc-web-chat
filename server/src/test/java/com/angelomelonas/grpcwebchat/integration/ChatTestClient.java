@@ -19,12 +19,12 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class ChatServiceTestClient {
+public class ChatTestClient {
     private final ManagedChannel managedChannel;
     private final ChatServiceBlockingStub blockingStub;
     private final ChatServiceStub asyncStub;
 
-    public ChatServiceTestClient() {
+    public ChatTestClient() {
         managedChannel = ManagedChannelBuilder.forAddress("127.0.0.1", 9090).usePlaintext().build();
         blockingStub = ChatServiceGrpc.newBlockingStub(managedChannel);
         asyncStub = ChatServiceGrpc.newStub(managedChannel);

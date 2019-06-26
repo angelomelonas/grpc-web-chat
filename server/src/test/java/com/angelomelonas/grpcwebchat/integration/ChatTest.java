@@ -8,12 +8,14 @@ import com.angelomelonas.grpcwebchat.Chat.MessageResponse;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
+import com.angelomelonas.grpcwebchat.ChatApplication;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -22,14 +24,18 @@ import java.util.Random;
 import java.util.UUID;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
-public class ChatServiceTest {
+@SpringBootTest(
+        properties = "spring.profiles.active=test",
+        classes = ChatApplication.class
+)
+@ActiveProfiles("test")
+public class ChatTest {
 
-    private ChatServiceTestClient chatServiceTestClient;
+    private ChatTestClient chatServiceTestClient;
 
     @Before
     public void ChatServiceTestClient() {
-        chatServiceTestClient = new ChatServiceTestClient();
+        chatServiceTestClient = new ChatTestClient();
     }
 
     @After
