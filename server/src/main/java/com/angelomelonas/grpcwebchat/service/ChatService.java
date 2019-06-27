@@ -10,10 +10,13 @@ import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
 import com.angelomelonas.grpcwebchat.ChatServiceGrpc.ChatServiceImplBase;
 import com.angelomelonas.grpcwebchat.common.ChatSession;
+import com.angelomelonas.grpcwebchat.repository.ChatRepository;
+import com.google.common.annotations.VisibleForTesting;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -23,6 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @GRpcService
 public class ChatService extends ChatServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatService.class);
+
+    @Autowired
+    ChatRepository chatRepository;
 
     private final ConcurrentHashMap<UUID, ChatSession> chatSessionHashMap;
 
@@ -60,7 +66,12 @@ public class ChatService extends ChatServiceImplBase {
             return;
         }
 
-        chatSession.subscribe(request.getUsername(), responseObserver);
+        String username = request.getUsername();
+
+        chatSession.subscribe(username, responseObserver);
+
+        // Log the user.
+        chatRepository.addUser(chatSessionId, username);
 
         final Message clientSubscribed = Message.newBuilder()
                 .setUuid(request.getUuid())
@@ -106,19 +117,25 @@ public class ChatService extends ChatServiceImplBase {
             throw new IllegalArgumentException("Cannot send message. ChatSession does not exist.");
         }
 
+        String message = request.getMessage();
+        Instant timestamp = Instant.now();
+
         try {
             // Broadcast the message to everyone, including the client which sent the message.
             HashMap<UUID, ChatSession> temp = new HashMap<>(this.chatSessionHashMap);
 
             temp.forEach(((id, chatSession) -> {
                 if (chatSession != null) {
-                    chatSession.sendMessage(senderSessionId, currentClientChatSession.getUsername(), request.getMessage());
+                    chatSession.sendMessage(senderSessionId, currentClientChatSession.getUsername(), message, timestamp.toEpochMilli());
                 }
             }));
         } catch (Throwable throwable) {
             LOGGER.error("Exception while sending message.", throwable);
             responseObserver.onError(throwable);
         }
+
+        // Log the message.
+        chatRepository.addMessage(senderSessionId, message, timestamp);
 
         final MessageResponse messageResponse = MessageResponse.newBuilder()
                 .setUuid(request.getUuid())
@@ -127,5 +144,10 @@ public class ChatService extends ChatServiceImplBase {
 
         responseObserver.onNext(messageResponse);
         responseObserver.onCompleted();
+    }
+
+    @VisibleForTesting
+    public void setChatRepository(ChatRepository chatRepository) {
+        this.chatRepository = chatRepository;
     }
 }

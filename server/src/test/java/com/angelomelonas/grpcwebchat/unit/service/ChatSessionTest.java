@@ -1,8 +1,9 @@
-package com.angelomelonas.grpcwebchat.unit;
+package com.angelomelonas.grpcwebchat.unit.service;
 
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.common.ChatSession;
 import org.junit.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -21,14 +22,16 @@ public class ChatSessionTest {
 
         String username = "RandomTestUsername123";
         String message = "Random Test Message 123";
+        long timestamp = Instant.now().toEpochMilli();
+
         Message expectedMessageResponse = Message.newBuilder()
                 .setUsername(username)
                 .setMessage(message)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(timestamp)
                 .build();
 
         chatSession.subscribe(username, streamObserver);
-        chatSession.sendMessage(sessionId, username, message);
+        chatSession.sendMessage(sessionId, username, message, timestamp);
 
         assertEquals(expectedMessageResponse.getMessage(), ((Message) streamObserver.response).getMessage());
         assertEquals(expectedMessageResponse.getUsername(), ((Message) streamObserver.response).getUsername());

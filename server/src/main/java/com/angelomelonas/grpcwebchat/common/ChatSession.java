@@ -13,9 +13,8 @@ public class ChatSession {
 
     private UUID sessionId;
     private String username;
-    private StreamObserver<Message> responseObserver;
-
     private boolean isSubscribed;
+    private StreamObserver<Message> responseObserver;
 
     public ChatSession(UUID sessionId) {
         this.sessionId = sessionId;
@@ -49,7 +48,7 @@ public class ChatSession {
         LOGGER.info("Client with username {} unsubscribed.", this.username);
     }
 
-    public synchronized void sendMessage(UUID senderId, String username, String message) {
+    public synchronized void sendMessage(UUID senderId, String username, String message, long timestamp) {
         if (!this.isSubscribed) {
             LOGGER.warn("Client not subscribed. Message was not sent.", this.username);
             return;
@@ -59,7 +58,7 @@ public class ChatSession {
                 .setUuid(String.valueOf(senderId))
                 .setUsername(username)
                 .setMessage(message)
-                .setTimestamp(Instant.now().toEpochMilli())
+                .setTimestamp(timestamp)
                 .build();
         try {
             this.responseObserver.onNext(newMessage);

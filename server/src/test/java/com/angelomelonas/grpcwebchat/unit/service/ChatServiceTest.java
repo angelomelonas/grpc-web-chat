@@ -1,4 +1,4 @@
-package com.angelomelonas.grpcwebchat.unit;
+package com.angelomelonas.grpcwebchat.unit.service;
 
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationRequest;
 import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
@@ -33,6 +33,7 @@ public class ChatServiceTest {
     @Test
     public void subscribeTest() {
         final ChatService chatService = new ChatService();
+        chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
         final String username = "RandomUsername123";
@@ -64,6 +65,7 @@ public class ChatServiceTest {
     @Test
     public void unsubscribeTest() {
         final ChatService chatService = new ChatService();
+        chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
         final String username = "RandomUsername123";
@@ -100,6 +102,7 @@ public class ChatServiceTest {
     @Test
     public void sendMessageTest() {
         final ChatService chatService = new ChatService();
+        chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
         final String username = "Random Username 123";
