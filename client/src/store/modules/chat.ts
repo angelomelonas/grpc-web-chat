@@ -1,184 +1,210 @@
-import {
-  Action,
-  getModule,
-  Module,
-  Mutation,
-  VuexModule
-} from "vuex-module-decorators";
+import {Action, getModule, Module, Mutation, VuexModule} from "vuex-module-decorators";
 import store from "@/store";
-import { ChatServiceClient } from "../../../proto/chat_grpc_web_pb";
+import {ChatServiceClient} from "../../../proto/chat_grpc_web_pb";
 import {
-  AuthenticationRequest,
-  AuthenticationResponse,
-  Message,
-  MessageRequest,
-  MessageResponse,
-  SubscriptionRequest,
-  UnsubscriptionRequest,
-  UnsubscriptionResponse
+    AuthenticationRequest,
+    AuthenticationResponse,
+    Message,
+    MessageRequest,
+    MessageResponse,
+    SubscribedUsers,
+    SubscribedUsersRequest,
+    SubscriptionRequest,
+    UnsubscriptionRequest,
+    UnsubscriptionResponse
 } from "../../../proto/chat_pb";
 import * as grpcWeb from "grpc-web";
 import moment from "moment";
 
 @Module({
-  namespaced: true,
-  name: "chat",
-  store,
-  dynamic: true
+    namespaced: true,
+    name: "chat",
+    store,
+    dynamic: true
 })
 class ChatModule extends VuexModule {
-  chatServiceClient!: ChatServiceClient;
+    chatServiceClient!: ChatServiceClient;
 
-  sessionId: string = "";
-  subscribed: boolean = false;
-  username: string = "";
-  messages: string = "";
+    sessionId: string = "";
+    subscribed: boolean = false;
+    username: string = "";
+    messages: string = "";
 
-  get getSessionId(): string {
-    return this.sessionId;
-  }
+    subscribedUsers: Array<object> = [];
 
-  get getUsername(): string {
-    return this.username;
-  }
+    get getSessionId(): string {
+        return this.sessionId;
+    }
 
-  get getMessages(): string {
-    return this.messages;
-  }
+    get getUsername(): string {
+        return this.username;
+    }
 
-  get isSubscribed(): boolean {
-    return this.subscribed;
-  }
+    get getMessages(): string {
+        return this.messages;
+    }
 
-  @Mutation
-  setSessionId(sessionId: string) {
-    this.sessionId = sessionId;
-  }
+    get isSubscribed(): boolean {
+        return this.subscribed;
+    }
 
-  @Mutation
-  setSubscription(subscription: boolean) {
-    this.subscribed = subscription;
-  }
+    get getSubscribedUsersList() {
+        return this.subscribedUsersList;
+    }
 
-  @Mutation
-  setUsername(username: string) {
-    this.username = username;
-  }
+    @Mutation
+    setSessionId(sessionId: string) {
+        this.sessionId = sessionId;
+    }
 
-  @Mutation
-  appendMessage(message: {
-    timestamp: number;
-    username: string;
-    message: string;
-  }) {
-    this.messages +=
-      "[" +
-      moment(message.timestamp).format("LTS") +
-      "] " +
-      message.username +
-      ": " +
-      message.message +
-      "\n";
-  }
+    @Mutation
+    setSubscription(subscription: boolean) {
+        this.subscribed = subscription;
+    }
 
-  @Action
-  connectClient(host: { hostname: string; port: number }) {
-    this.chatServiceClient = new ChatServiceClient(
-      "http://" + host.hostname + ":" + host.port,
-      null,
-      null
-    );
-  }
+    @Mutation
+    setUsername(username: string) {
+        this.username = username;
+    }
 
-  @Action
-  authenticate() {
-    const authenticationRequest = new AuthenticationRequest();
+    @Mutation
+    setSubscribedUsersList(subscribedUsers: Array<object>) {
+        this.subscribedUsers = subscribedUsers;
+    }
 
-    this.chatServiceClient.authenticate(
-      authenticationRequest,
-      {},
-      (err: grpcWeb.Error, authenticationResponse: AuthenticationResponse) => {
-        if (!err) {
-          this.setSessionId(authenticationResponse.getUuid());
-        } else {
-          console.error(err);
-        }
-      }
-    );
-  }
+    @Mutation
+    appendMessage(message: {
+        timestamp: number;
+        username: string;
+        message: string;
+    }) {
+        this.messages +=
+            "[" +
+            moment(message.timestamp).format("LTS") +
+            "] " +
+            message.username +
+            ": " +
+            message.message +
+            "\n";
+    }
 
-  @Action
-  subscribe() {
-    const subscriptionRequest = new SubscriptionRequest();
+    @Action
+    connectClient(host: { hostname: string; port: number }) {
+        this.chatServiceClient = new ChatServiceClient(
+            "http://" + host.hostname + ":" + host.port,
+            null,
+            null
+        );
+    }
 
-    subscriptionRequest.setUuid(this.getSessionId);
-    subscriptionRequest.setUsername(this.getUsername);
+    @Action
+    authenticate() {
+        const authenticationRequest = new AuthenticationRequest();
 
-    this.chatServiceClient
-      .subscribe(subscriptionRequest)
-      .on("data", (message: Message) => {
-        this.setSubscription(true);
-        this.appendMessage({
-          timestamp: message.getTimestamp(),
-          username: message.getUsername(),
-          message: message.getMessage()
-        });
-      })
-      .on("error", (error: grpcWeb.Error) => {
-        this.setSubscription(false);
-        console.error(error);
-      })
-      .on("end", () => {
-        console.log("Chat session closed.");
-      });
-  }
+        this.chatServiceClient.authenticate(
+            authenticationRequest,
+            {},
+            (err: grpcWeb.Error, authenticationResponse: AuthenticationResponse) => {
+                if (!err) {
+                    this.setSessionId(authenticationResponse.getUuid());
+                } else {
+                    console.error(err);
+                }
+            }
+        );
+    }
 
-  @Action
-  unsubscribe() {
-    const unsubscriptionRequest = new UnsubscriptionRequest();
-    unsubscriptionRequest.setUuid(this.getSessionId);
+    @Action
+    subscribe() {
+        const subscriptionRequest = new SubscriptionRequest();
 
-    this.chatServiceClient.unsubscribe(
-      unsubscriptionRequest,
-      {},
-      (err: grpcWeb.Error, unsubscriptionResponse: UnsubscriptionResponse) => {
-        if (unsubscriptionResponse) {
-          this.setSubscription(false);
-          this.appendMessage({
-            timestamp: moment().unix(),
-            username: "Server",
-            message: unsubscriptionResponse.getMessage()
-          });
-        }
-        if (err) {
-          console.error(err);
-        }
-      }
-    );
-  }
+        subscriptionRequest.setUuid(this.getSessionId);
+        subscriptionRequest.setUsername(this.getUsername);
 
-  @Action
-  sendMessage(message: string) {
-    const messageRequest = new MessageRequest();
+        this.chatServiceClient
+            .subscribe(subscriptionRequest)
+            .on("data", (message: Message) => {
+                this.setSubscription(true);
+                this.appendMessage({
+                    timestamp: message.getTimestamp(),
+                    username: message.getUsername(),
+                    message: message.getMessage()
+                });
+            })
+            .on("error", (error: grpcWeb.Error) => {
+                this.setSubscription(false);
+                console.error(error);
+            })
+            .on("end", () => {
+                console.log("Unsubscribed from chat session.");
+            });
+    }
 
-    messageRequest.setUuid(this.getSessionId);
-    messageRequest.setUsername(this.getUsername);
-    messageRequest.setMessage(message);
+    @Action
+    subscribedUsersList() {
+        const subscribedUsersRequest = new SubscribedUsersRequest();
 
-    this.chatServiceClient.sendMessage(
-      messageRequest,
-      {},
-      (err: grpcWeb.Error, messageResponse: MessageResponse) => {
-        if (messageResponse) {
-          console.log("Message received: " + messageResponse.getMessage());
-        }
+        subscribedUsersRequest.setUuid(this.getSessionId);
 
-        if (err) {
-          console.error(err);
-        }
-      }
-    );
-  }
+        this.chatServiceClient
+            .subscribedUsersList(subscribedUsersRequest)
+            .on("data", (subscribedUsers: SubscribedUsers) => {
+                this.setSubscribedUsersList(subscribedUsers.getUsersMap().toArray());
+            })
+            .on("error", (error: grpcWeb.Error) => {
+                console.error(error);
+            })
+            .on("end", () => {
+                console.log("Chat session closed.");
+            });
+    }
+
+    @Action
+    unsubscribe() {
+        const unsubscriptionRequest = new UnsubscriptionRequest();
+        unsubscriptionRequest.setUuid(this.getSessionId);
+
+        this.chatServiceClient.unsubscribe(
+            unsubscriptionRequest,
+            {},
+            (err: grpcWeb.Error, unsubscriptionResponse: UnsubscriptionResponse) => {
+                if (unsubscriptionResponse) {
+                    this.setSubscription(false);
+                    this.appendMessage({
+                        timestamp: moment().unix(),
+                        username: "Server",
+                        message: unsubscriptionResponse.getMessage()
+                    });
+                }
+                if (err) {
+                    console.error(err);
+                }
+            }
+        );
+    }
+
+    @Action
+    sendMessage(message: string) {
+        const messageRequest = new MessageRequest();
+
+        messageRequest.setUuid(this.getSessionId);
+        messageRequest.setUsername(this.getUsername);
+        messageRequest.setMessage(message);
+
+        this.chatServiceClient.sendMessage(
+            messageRequest,
+            {},
+            (err: grpcWeb.Error, messageResponse: MessageResponse) => {
+                if (messageResponse) {
+                    console.log("Message received: " + messageResponse.getMessage());
+                }
+
+                if (err) {
+                    console.error(err);
+                }
+            }
+        );
+    }
 }
 
 export default getModule(ChatModule);
