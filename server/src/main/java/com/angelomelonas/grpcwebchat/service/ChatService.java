@@ -6,7 +6,6 @@ import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
 import com.angelomelonas.grpcwebchat.Chat.MessageResponse;
 import com.angelomelonas.grpcwebchat.Chat.SubscribedUsers;
-import com.angelomelonas.grpcwebchat.Chat.SubscribedUsers.Builder;
 import com.angelomelonas.grpcwebchat.Chat.SubscribedUsersRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
@@ -16,6 +15,8 @@ import com.angelomelonas.grpcwebchat.ChatServiceGrpc.ChatServiceImplBase;
 import com.angelomelonas.grpcwebchat.common.ChatSession;
 import com.angelomelonas.grpcwebchat.repository.ChatRepository;
 import com.google.common.annotations.VisibleForTesting;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.lognet.springboot.grpc.GRpcService;
 import org.slf4j.Logger;
@@ -23,17 +24,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @GRpcService
 public class ChatService extends ChatServiceImplBase {
@@ -50,8 +49,7 @@ public class ChatService extends ChatServiceImplBase {
         this.connectedClients = new ConcurrentHashMap<>();
 
         // This timer will send all subscribed clients a list of subscribed clients.
-        startSubscribedUserListTimer();
-
+        this.startSubscribedUserListTimer();
     }
 
     @Override
@@ -97,14 +95,14 @@ public class ChatService extends ChatServiceImplBase {
         responseObserver.onNext(clientSubscribed);
 
         // Log the user.
-        chatRepository.addUser(chatSessionId, username);
+//        chatRepository.addUser(chatSessionId, username);
     }
 
     @Override
     public void unsubscribe(UnsubscriptionRequest request, StreamObserver<UnsubscriptionResponse> responseObserver) {
         UUID chatSessionId = UUID.fromString(request.getUuid());
 
-        if (!this.connectedClients.contains(chatSessionId)) {
+        if (!this.connectedClients.containsKey(chatSessionId)) {
             responseObserver.onError(new IllegalArgumentException("Cannot unsubscribe. Client does not exist."));
             LOGGER.warn("Cannot unsubscribe. Client does not exist.");
             return;
@@ -128,7 +126,7 @@ public class ChatService extends ChatServiceImplBase {
         String message = request.getMessage();
         Instant timestamp = Instant.now();
 
-        if (!this.connectedClients.contains(senderSessionId)) {
+        if (!this.connectedClients.containsKey(senderSessionId)) {
             responseObserver.onError(new IllegalArgumentException("Cannot send message. Client does not exist."));
             LOGGER.warn("Cannot send message. Client does not exist.");
             return;
@@ -169,16 +167,17 @@ public class ChatService extends ChatServiceImplBase {
         responseObserver.onCompleted();
 
         // Log the message.
-        chatRepository.addMessage(senderSessionId, message, timestamp);
+//        chatRepository.addMessage(senderSessionId, message, timestamp);
     }
 
     @Override
     public void subscribedUserList(SubscribedUsersRequest request, StreamObserver<SubscribedUsers> responseObserver) {
         UUID chatSessionId = UUID.fromString(request.getUuid());
 
-        if (!this.connectedClients.contains(chatSessionId)) {
-            responseObserver.onError(new IllegalArgumentException("Cannot obtain subscribed user list. Client does not exist."));
-            LOGGER.warn("Cannot obtain subscribed user list. Client does not exist.");
+        if (!this.connectedClients.containsKey(chatSessionId)) {
+
+            responseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("Cannot obtain subscribed user list. Client does not exist."))));
+            LOGGER.info("Cannot obtain subscribed user list. Client does not exist.");
             return;
         }
 
@@ -194,33 +193,23 @@ public class ChatService extends ChatServiceImplBase {
     }
 
     private void startSubscribedUserListTimer() {
-        TimerTask timerTask = new TimerTask() {
+        ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+        exec.scheduleAtFixedRate(() -> {
+            // Make a temporary copy to prevent concurrency issues.
+            HashMap<UUID, ChatSession> currentlyConnectedClients = new HashMap<>(this.connectedClients);
 
-            @Override
-            public void run() {
-                publishSubscribedUserList();
+            List<User> userList = currentlyConnectedClients.entrySet().stream().map(chatSession -> User.newBuilder()
+                    .setUsername(chatSession.getValue().getUsername())
+                    .setSubscribed(chatSession.getValue().isSubscribed())
+                    .build()).collect(Collectors.toList());
+
+            SubscribedUsers subscribedUsers = SubscribedUsers.newBuilder().addAllUsers(userList).build();
+            try {
+                currentlyConnectedClients.forEach((uuid, chatSession) -> chatSession.publishSubscribedUserList(subscribedUsers));
+            } catch (Throwable throwable) {
+                LOGGER.error("Exception while publishing subscribed users.", throwable);
             }
-        };
-
-        Timer timer = new Timer("MyTimer");
-        timer.scheduleAtFixedRate(timerTask, 30, 1000);
-    }
-
-    private void publishSubscribedUserList() {
-        // Make a temporary copy to prevent concurrency issues.
-        HashMap<UUID, ChatSession> currentlyConnectedClients = new HashMap<>(this.connectedClients);
-
-        List<User> userList = currentlyConnectedClients.entrySet().stream().map(chatSession -> User.newBuilder()
-                .setUsername(chatSession.getValue().getUsername())
-                .setSubscribed(chatSession.getValue().isSubscribed())
-                .build()).collect(Collectors.toList());
-
-        SubscribedUsers subscribedUsers = SubscribedUsers.newBuilder().addAllUsers(userList).build();
-        try {
-            currentlyConnectedClients.forEach((uuid, chatSession) -> chatSession.publishSubscribedUserList(subscribedUsers));
-        } catch (Throwable throwable) {
-            LOGGER.error("Exception while publishing subscribed users.", throwable);
-        }
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     @VisibleForTesting
