@@ -17,7 +17,8 @@ import {
   SubscribedUsersRequest,
   SubscriptionRequest,
   UnsubscriptionRequest,
-  UnsubscriptionResponse
+  UnsubscriptionResponse,
+  User
 } from "../../../proto/chat_pb";
 import * as grpcWeb from "grpc-web";
 import moment from "moment";
@@ -36,7 +37,7 @@ class ChatModule extends VuexModule {
   username: string = "";
   messages: string = "";
 
-  subscribedUsers: Array<object> = [];
+  subscribedUserList: Array<User> = [];
 
   get getSessionId(): string {
     return this.sessionId;
@@ -54,8 +55,8 @@ class ChatModule extends VuexModule {
     return this.subscribed;
   }
 
-  get getSubscribedUsersList() {
-    return this.subscribedUsersList;
+  get getSubscribedUsersList(): Array<User> {
+    return this.subscribedUserList;
   }
 
   @Mutation
@@ -74,8 +75,8 @@ class ChatModule extends VuexModule {
   }
 
   @Mutation
-  setSubscribedUsersList(subscribedUsers: Array<object>) {
-    this.subscribedUsers = subscribedUsers;
+  setSubscribedUsersList(subscribedUserList: Array<User>) {
+    this.subscribedUserList = subscribedUserList;
   }
 
   @Mutation
@@ -130,7 +131,13 @@ class ChatModule extends VuexModule {
     this.chatServiceClient
       .subscribe(subscriptionRequest)
       .on("data", (message: Message) => {
-        this.setSubscription(true);
+        if (!this.isSubscribed) {
+          this.setSubscription(true);
+
+          // Subscribe to the list of subscribed users.
+          this.subscribedUsersList();
+        }
+
         this.appendMessage({
           timestamp: message.getTimestamp(),
           username: message.getUsername(),
@@ -143,25 +150,6 @@ class ChatModule extends VuexModule {
       })
       .on("end", () => {
         console.log("Unsubscribed from chat session.");
-      });
-  }
-
-  @Action
-  subscribedUsersList() {
-    const subscribedUsersRequest = new SubscribedUsersRequest();
-
-    subscribedUsersRequest.setUuid(this.getSessionId);
-
-    this.chatServiceClient
-      .subscribedUsersList(subscribedUsersRequest)
-      .on("data", (subscribedUsers: SubscribedUsers) => {
-        this.setSubscribedUsersList(subscribedUsers.getUsersMap().toArray());
-      })
-      .on("error", (error: grpcWeb.Error) => {
-        console.error(error);
-      })
-      .on("end", () => {
-        console.log("Chat session closed.");
       });
   }
 
@@ -210,6 +198,26 @@ class ChatModule extends VuexModule {
         }
       }
     );
+  }
+
+  @Action
+  subscribedUsersList() {
+    const subscribedUsersRequest = new SubscribedUsersRequest();
+
+    subscribedUsersRequest.setUuid(this.getSessionId);
+
+    this.chatServiceClient
+      .subscribedUserList(subscribedUsersRequest)
+      .on("data", (subscribedUsers: SubscribedUsers) => {
+        console.log("Subscribed list received!");
+        this.setSubscribedUsersList(subscribedUsers.getUsersList());
+      })
+      .on("error", (error: grpcWeb.Error) => {
+        console.error(error);
+      })
+      .on("end", () => {
+        console.log("Chat session closed.");
+      });
   }
 }
 
