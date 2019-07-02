@@ -38,7 +38,7 @@ service ChatService {
      * Request      SubscribedUsersRequest is a message to request the list of subscribed users.
      * Response     A long-lived stream of SubscribedUsers.
      */
-    rpc SubscribedUsersList (SubscribedUsersRequest) returns (stream SubscribedUsers);
+    rpc SubscribedUserList (SubscribedUsersRequest) returns (stream SubscribedUsers);
 }
 
 message AuthenticationRequest {
@@ -85,6 +85,10 @@ message SubscribedUsersRequest {
 }
 
 message SubscribedUsers {
-    /* map<username, subscribed> */
-    map<string, bool> users = 1;
+    repeated User users = 1;
+}
+
+message User {
+    string username = 1;
+    bool subscribed = 2;
 }
