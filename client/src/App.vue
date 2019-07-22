@@ -41,7 +41,7 @@ export default class App extends Vue {
     chat.connectClient({ hostname: "localhost", port: 8080 });
 
     // Authenticate the client.
-    chat.authenticate();
+    // chat.authenticate();
 
     // If the window is closed or reloaded, unsubscribe.
     window.addEventListener("beforeunload", this.onClose);
