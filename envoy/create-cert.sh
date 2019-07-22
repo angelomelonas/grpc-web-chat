@@ -7,18 +7,16 @@ LOCALITY=Stellenbosch
 COMPANY=ExampleCo
 UNIT=ExampleCoSecurityDepartment
 CA_CN_NAME=example-ca.com
-CN_NAME=example.com
+CN_NAME=ExampleCoCN
 EMAIL=security@example.com
 PASS=1234
 
 # Certificate Authority
 echo ------------ Generate CA key: ------------
-openssl genrsa -des3 -passout pass:${PASS} -out pem/ca.key 2048
+ openssl genrsa -des3 -passout pass:${PASS} -out pem/ca.key 2048
 
 echo ------------ Generate CA certificate: ------------
 openssl req -new -x509 -passin pass:${PASS} -days 365 -key pem/ca.key -out pem/ca.crt -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CA_CN_NAME}"
-
-openssl req -new -sha256 -key domain.key -subj "/C=US/ST=CA/O=Acme, Inc./CN=example.com" -reqexts SAN -extensions SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=DNS:example.com,DNS:www.example.com")) -out domain.csr
 
 # Server side key
 echo ------------ Generate server key: ------------
@@ -37,7 +35,7 @@ openssl rsa -passin pass:${PASS} -in pem/server.key -out pem/server.key
 echo ------------ Concatenate the Server Certificate and Key into a .pem file: ------------
 cat pem/server.crt pem/server.key > pem/server.pem
 
-echo ------------ Convert to Unix files ------------
+#echo ------------ Convert to Unix files ------------
 dos2unix pem/ca.crt
 dos2unix pem/ca.key
 dos2unix pem/server.crt
