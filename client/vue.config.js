@@ -10,8 +10,8 @@ module.exports = {
     port: 443,
     https: {
       key: fs.readFileSync("./pem/server.key"),
-      cert: fs.readFileSync("./pem/server.crt"),
+      cert: fs.readFileSync("./pem/server.crt")
     },
-    disableHostCheck: true,
-  },
+    disableHostCheck: true
+  }
 };

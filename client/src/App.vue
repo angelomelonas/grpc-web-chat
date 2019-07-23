@@ -37,7 +37,7 @@ import UserList from "@/components/UserList.vue";
 })
 export default class App extends Vue {
   private created(): void {
-    // On app creation, connect to the gRPC server.
+    // On app creation, connect to the gRPC server via the Envoy proxy.
     chat.connectClient({ hostname: "localhost", port: 8080 });
 
     // Authenticate the client.
