@@ -19,16 +19,16 @@ static_resources:
                   name: local_route
                   virtual_hosts:
                     - name: local_service
-                      domains: ["*"]
+                      domains: ["localhost:8080"]
                       routes:
                         - match: { prefix: "/" }
                           route:
-                            cluster: s1
+                            cluster: grpc_web_chat
                             prefix_rewrite: "/"
                             max_grpc_timeout: 0s
                       cors:
                         allow_origin:
-                        - "*"
+                        - "https://localhost"
                         allow_methods: GET, PUT, DELETE, POST, OPTIONS
                         allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,custom-header-1,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
                         max_age: "1728000"
@@ -51,7 +51,7 @@ static_resources:
                   private_key:
                     filename: "/etc/server.key"
   clusters:
-    - name: s1
+    - name: grpc_web_chat
       connect_timeout: 15s
       type: logical_dns
       http2_protocol_options: {}

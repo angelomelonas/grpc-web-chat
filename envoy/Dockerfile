@@ -14,13 +14,8 @@
 
 FROM envoyproxy/envoy-alpine:v1.10.0
 
-EXPOSE 8080
-
 COPY ./envoy.yaml /etc/envoy/envoy.yaml
-#ADD ./pem/server.pem /etc/server.pem
 ADD ./pem/server.crt /etc/server.crt
 ADD ./pem/server.key /etc/server.key
-
-#CMD /usr/local/bin/envoy -c /etc/envoy/envoy.yaml
 
 CMD ["/usr/local/bin/envoy", "-c", "/etc/envoy/envoy.yaml", "-l", "debug"]

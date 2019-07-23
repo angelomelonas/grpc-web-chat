@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Change the specific details here. Pay close attention to the CA_CN_NAME and the CN_NAME. Also not that the backslashes (\\) after -subj should probably be replaced for Mac/Unix systems.
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Change the specific details here. Pay close attention to the CA_CN_NAME and the CN_NAME.          #
+# Also not that the backslashes (\\) after -subj should probably be replaced for Mac/Unix systems.  #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 C_CODE=ZA
 STATE=WesternCape
 LOCALITY=Stellenbosch
@@ -25,20 +29,12 @@ openssl genrsa -des3 -passout pass:${PASS} -out pem/server.key 2048
 echo ------------ Generate server signing request: ------------
 openssl req -new -passin pass:${PASS} -key pem/server.key -out pem/server.csr -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CN_NAME}"
 
-echo ------------ Self-signed server certificate: ------------
+echo ------------ Server certificate: ------------
 openssl x509 -req -passin pass:${PASS} -days 365 -in pem/server.csr -CA pem/ca.crt -CAkey pem/ca.key -set_serial 01 -out pem/server.crt -sha256 -extfile v3.ext
 
 echo ------------ Remove passphrase from server key: ------------
 openssl rsa -passin pass:${PASS} -in pem/server.key -out pem/server.key
 
-# Create PEM
-echo ------------ Concatenate the Server Certificate and Key into a .pem file: ------------
-cat pem/server.crt pem/server.key > pem/server.pem
-
-#echo ------------ Convert to Unix files ------------
-dos2unix pem/ca.crt
-dos2unix pem/ca.key
-dos2unix pem/server.crt
-dos2unix pem/server.csr
-dos2unix pem/server.key
-dos2unix pem/server.pem
+echo ------------ Copy key and cert to client for dev server: ------------
+cp -rf pem/server.key ../client/pem/server.key
+cp -rf pem/server.crt ../client/pem/server.crt
