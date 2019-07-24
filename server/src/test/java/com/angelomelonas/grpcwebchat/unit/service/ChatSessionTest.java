@@ -31,7 +31,15 @@ public class ChatSessionTest {
                 .build();
 
         chatSession.subscribe(username, streamObserver);
-        chatSession.sendMessage(sessionId, username, message, timestamp);
+
+        Message newMessage = Message.newBuilder()
+                .setUuid(String.valueOf(sessionId))
+                .setUsername(username)
+                .setMessage(message)
+                .setTimestamp(timestamp)
+                .build();
+
+        chatSession.sendMessage(newMessage);
 
         assertEquals(expectedMessageResponse.getMessage(), ((Message) streamObserver.response).getMessage());
         assertEquals(expectedMessageResponse.getUsername(), ((Message) streamObserver.response).getUsername());

@@ -98,7 +98,7 @@ class ChatModule extends VuexModule {
   @Action
   connectClient(host: { hostname: string; port: number }) {
     this.chatServiceClient = new ChatServiceClient(
-      "http://" + host.hostname + ":" + host.port,
+      "https://" + host.hostname + ":" + host.port,
       null,
       null
     );
