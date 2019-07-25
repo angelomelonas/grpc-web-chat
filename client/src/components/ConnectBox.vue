@@ -1,42 +1,44 @@
 <template>
-  <v-container pa-2 pb-1>
-    <v-layout align-center justify-center row fill-height>
-      <v-flex xs12>
+  <v-container class="pa-2 pb-1">
+    <v-row class="fill-height" align="center" justify="center">
+      <v-col cols="10">
         <v-text-field
           label="Username"
           placeholder="Your username here..."
-          outline
+          filled
           maxlength="64"
           minlength="4"
           hide-details
           autofocus
           prepend-icon="account_circle"
           :value="username"
-          @input="setUsername"
           :disabled="isSubscribed"
-        ></v-text-field>
-      </v-flex>
+          @input="setUsername"
+        />
+      </v-col>
 
-      <v-flex>
+      <v-col cols="2">
         <v-btn
           v-if="!isSubscribed"
           color="success"
-          @click="subscribe()"
           :disabled="username.length < 4"
           large
-          >Subscribe
+          @click="subscribe()"
+        >
+          Subscribe
         </v-btn>
 
         <v-btn
           v-else
           color="error"
-          @click="unsubscribe()"
           :disabled="username.length < 4 || username.length > 64"
           large
-          >Unsubscribe
+          @click="unsubscribe()"
+        >
+          Unsubscribe
         </v-btn>
-      </v-flex>
-    </v-layout>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 

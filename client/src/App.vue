@@ -1,25 +1,27 @@
 <template>
   <v-app>
-    <v-toolbar dark class="primary" app dense flat clipped-left>
+    <v-app-bar dark app dense flat>
       <v-toolbar-title> gRPC CHAT</v-toolbar-title>
       <v-toolbar-items class="hidden-xs-only"></v-toolbar-items>
-    </v-toolbar>
+    </v-app-bar>
 
-    <v-content fluid>
+    <v-content>
       <v-container>
         <connect-box></connect-box>
         <v-divider></v-divider>
-        <v-layout align-start justify-center row fill-height>
-          <v-flex xs10>
+        <v-row class="fill-height" align="start" justify="center">
+          <v-col cols="10">
             <chat-box></chat-box>
-          </v-flex>
-          <v-flex xs2>
+          </v-col>
+          <v-col cols="2">
             <user-list></user-list>
-          </v-flex>
-        </v-layout>
+          </v-col>
+        </v-row>
         <type-box></type-box>
       </v-container>
     </v-content>
+
+    <v-footer app> </v-footer>
   </v-app>
 </template>
 
