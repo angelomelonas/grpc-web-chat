@@ -1,20 +1,20 @@
 <template>
-  <v-container pa-2>
+  <v-container>
     <v-list
       style="max-height: 100%"
-      class="scroll-y"
+      class="overflow-y-auto"
       :style="{ maxHeight: 480 + 'px' }"
     >
-      <v-list-tile v-if="!isSubscribed">
+      <v-list-item v-if="!isSubscribed">
         Subscribe to see connected users
-      </v-list-tile>
+      </v-list-item>
 
-      <v-list-tile v-else-if="isSubscribed && subscribedUserList == 0">
+      <v-list-item v-else-if="isSubscribed && subscribedUserList == 0">
         No other connected users
-      </v-list-tile>
+      </v-list-item>
 
       <template v-else v-for="user in subscribedUserList">
-        <v-list-tile
+        <v-list-item
           v-if="user.getUsername() != username"
           :key="user.getUsername()"
         >
@@ -22,10 +22,10 @@
             :style="{ color: user.getSubscribed() ? '#a5d6a7' : '#ffab91' }"
             >fiber_manual_record</v-icon
           >
-          <v-list-tile-content>
-            <v-list-tile-title v-text="user.getUsername()"></v-list-tile-title>
-          </v-list-tile-content>
-        </v-list-tile>
+          <v-list-item-content>
+            <v-list-item-title v-text="user.getUsername()"></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </template>
     </v-list>
   </v-container>

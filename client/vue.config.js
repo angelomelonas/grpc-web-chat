@@ -9,8 +9,8 @@ module.exports = {
     host: "localhost",
     port: 443,
     https: {
-      key: fs.readFileSync("./pem/server.key"),
-      cert: fs.readFileSync("./pem/server.crt")
+      key: fs.readFileSync("./certificates/server.key"),
+      cert: fs.readFileSync("./certificates/server.crt")
     },
     disableHostCheck: true
   }

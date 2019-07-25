@@ -15,7 +15,7 @@
 FROM envoyproxy/envoy-alpine:v1.10.0
 
 COPY ./envoy.yaml /etc/envoy/envoy.yaml
-ADD ./pem/server.crt /etc/server.crt
-ADD ./pem/server.key /etc/server.key
+ADD ./certificates/server.crt /etc/server.crt
+ADD ./certificates/server.key /etc/server.key
 
 CMD ["/usr/local/bin/envoy", "-c", "/etc/envoy/envoy.yaml", "-l", "debug"]
