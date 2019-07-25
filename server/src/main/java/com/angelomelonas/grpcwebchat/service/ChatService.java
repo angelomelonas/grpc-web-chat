@@ -95,7 +95,7 @@ public class ChatService extends ChatServiceImplBase {
         responseObserver.onNext(clientSubscribed);
 
         // Log the user.
-//        chatRepository.addUser(chatSessionId, username);
+        chatRepository.addUser(chatSessionId, username);
     }
 
     @Override
@@ -167,7 +167,7 @@ public class ChatService extends ChatServiceImplBase {
         responseObserver.onCompleted();
 
         // Log the message.
-//        chatRepository.addMessage(senderSessionId, message, timestamp);
+        chatRepository.addMessage(senderSessionId, message, timestamp);
     }
 
     @Override
