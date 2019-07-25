@@ -32,6 +32,7 @@
     "babel-eslint": "10.0.2",
     "eslint": "5.16.0",
     "eslint-plugin-vue": "5.2.3",
+    "eslint-plugin-vuetify": "^1.0.0-beta.3",
     "sass": "1.17.4",
     "sass-loader": "7.1.0",
     "stylus": "0.54.5",
@@ -47,13 +48,19 @@
     "env": {
       "node": true
     },
+    "plugins": [
+      "vuetify"
+    ],
     "extends": [
       "plugin:vue/essential",
       "@vue/prettier",
       "@vue/typescript"
     ],
     "rules": {
-      "no-console": "off"
+      "no-console": "off",
+      "vuetify/no-deprecated-classes": "error",
+      "vuetify/grid-unknown-attributes": "error",
+      "vuetify/no-legacy-grid": "error"
     },
     "parserOptions": {
       "parser": "@typescript-eslint/parser"
