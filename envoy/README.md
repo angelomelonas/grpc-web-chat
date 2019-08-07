@@ -1,4 +1,6 @@
-The default setup works for `localhost`.
+# Setting up the Envoy Proxy
+
+The Envoy Proxy is configured in the `envoy.yaml` file. The default setup is for `localhost`.
 
 ##### For Windows
 1. Run `create-cert.sh` to create certificates.

@@ -8,12 +8,16 @@ A simple project demonstrating how both a Go and Java back end can power the sam
 * The [Envoy Proxy](https://github.com/envoyproxy/envoy) is used to translate between the browser and the gRPC server.
     * TLS/SSL is used to allow HTTP2 connections between the browser and Envoy. This is to circumvent [browser connection limitations](https://docs.pushtechnology.com/cloud/latest/manual/html/designguide/solution/support/connection_limitations.html). More on this [here](https://github.com/grpc/grpc-web/issues/522).
 
+## Overview
+
+![gRPC-Web Overview](https://i.ibb.co/YPw20rx/grpc-diagram.png)
+
 ## Project Branches
 The root of the project contains the shared API and client code. Checkout the relevant server branch in your language of choice. 
 
 ```
-master -> dev-stable -> go-dev-stable
-                     -> java-dev-stable
+master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
+                                -> java-dev-stable  [-> java-dev]
 ```
 
 ## Requirements
