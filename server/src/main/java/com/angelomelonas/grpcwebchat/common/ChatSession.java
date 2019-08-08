@@ -16,27 +16,21 @@ public class ChatSession {
 
     private UUID sessionId;
     private String username;
-    private volatile boolean isSubscribed;
     private Context currentContext;
     private StreamObserver<Message> subscriptionResponseObserver;
     private StreamObserver<SubscribedUsers> usersListResponseObserver;
-    private boolean remove;
 
     public ChatSession(UUID sessionId, Context currentContext) {
         this.sessionId = sessionId;
         this.currentContext = currentContext;
-        this.isSubscribed = false;
-        this.remove = false;
         LOGGER.info("ChatSession with UUID {} has been created.", sessionId);
     }
 
     public synchronized void subscribe(String username, StreamObserver responseObserver) {
-        if (this.isSubscribed) {
-            LOGGER.warn("Cannot subscribe. Client with session ID {} already subscribed.", this.sessionId);
+        if (!this.isConnected()) {
+            notConnected("Subscribe");
             return;
         }
-        this.isSubscribed = true;
-
         this.username = username;
         this.subscriptionResponseObserver = responseObserver;
 
@@ -44,19 +38,17 @@ public class ChatSession {
     }
 
     public synchronized void unsubscribe() {
-        if (!this.isSubscribed) {
-            LOGGER.warn("Cannot unsubscribe. Client with session ID {} already unsubscribed.", this.sessionId);
+        if (!this.isConnected()) {
+            notConnected("Unsubscribe");
             return;
         }
-
-        this.isSubscribed = false;
 
         // Try to close the streams.
         try {
             this.subscriptionResponseObserver.onCompleted();
             this.subscriptionResponseObserver = null;
         } catch (IllegalStateException exception) {
-            this.subscriptionResponseObserver.onError(new IllegalArgumentException("Failed to publish list of subscribed clients"));
+            this.subscriptionResponseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("Failed to publish list of subscribed clients"))));
             LOGGER.error("An error was thrown while trying to unsubscribe user with session ID {}.", this.sessionId, exception);
             throw exception;
         }
@@ -65,7 +57,7 @@ public class ChatSession {
             this.usersListResponseObserver.onCompleted();
             this.usersListResponseObserver = null;
         } catch (IllegalStateException exception) {
-            this.usersListResponseObserver.onError(new IllegalArgumentException("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list."));
+            this.usersListResponseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list."))));
             LOGGER.error("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list.", this.sessionId, exception);
             throw exception;
         }
@@ -74,14 +66,8 @@ public class ChatSession {
     }
 
     public synchronized void sendMessage(Message newMessage) {
-        if (!this.isSubscribed) {
-            LOGGER.warn("Client not subscribed. Cannot send message to client with session ID {}.", this.sessionId);
-            return;
-        }
-
-        if (this.currentContext.isCancelled()) {
-            LOGGER.warn("Client not connected. Cannot send message to client with session ID {}.", this.sessionId);
-            this.remove = true;
+        if (!this.isConnected()) {
+            notConnected("Send Message");
             return;
         }
 
@@ -95,30 +81,22 @@ public class ChatSession {
     }
 
     public void setSubscribedUserListResponseObserver(StreamObserver<SubscribedUsers> responseObserver) {
-        if (!this.isSubscribed) {
-            LOGGER.warn("Client not subscribed. Client with session ID {} cannot obtain list of subscribed users.", this.sessionId);
-            responseObserver.onCompleted();
+        if (!this.isConnected()) {
+            notConnected("Set Subscribed User List Response Observer");
             return;
         }
         this.usersListResponseObserver = responseObserver;
     }
 
     public synchronized void publishSubscribedUserList(SubscribedUsers subscribedUsers) {
-        if (!this.isSubscribed || this.usersListResponseObserver == null) {
-            LOGGER.warn("Client not subscribed. Cannot publish list of subscribed clients to client with session ID {}.", this.sessionId);
-            return;
-        }
-
-        if (this.currentContext.isCancelled()) {
-            LOGGER.warn("Client not connected. Cannot publish list of subscribed clients to client with session ID {}.", this.sessionId);
-            this.remove = true;
+        if (!this.isConnected()) {
+            notConnected("Publish Subscribed User List");
             return;
         }
 
         try {
             this.usersListResponseObserver.onNext(subscribedUsers);
         } catch (IllegalStateException exception) {
-            this.isSubscribed = false;
             this.usersListResponseObserver = null;
             this.usersListResponseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("Failed to publish list of subscribed clients"))));
             LOGGER.error("Failed to publish list of subscribed clients", exception);
@@ -130,11 +108,11 @@ public class ChatSession {
         return this.username;
     }
 
-    public synchronized boolean isSubscribed() {
-        return this.isSubscribed;
+    public synchronized boolean isConnected() {
+        return !this.currentContext.isCancelled();
     }
 
-    public boolean remove() {
-        return this.remove;
+    private void notConnected(String action) {
+        LOGGER.warn("{}: Client not connected. Chat Session ID {}.", action, this.sessionId);
     }
 }

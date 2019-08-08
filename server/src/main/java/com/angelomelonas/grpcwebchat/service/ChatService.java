@@ -75,9 +75,8 @@ public class ChatService extends ChatServiceImplBase {
     @Override
     public void subscribe(SubscriptionRequest request, StreamObserver<Message> responseObserver) {
         if (!checkIfValidUUID(request.getUuid())) {
-            IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot subscribe. Invalid UUID received from client.");
-            responseObserver.onError(illegalArgumentException);
-            LOGGER.error("Cannot subscribe. Invalid UUID received from client trying to subscribe.");
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot subscribe. Invalid UUID received from client attempting to subscribe.")));
+            LOGGER.error("Cannot subscribe. Invalid UUID received from client attempting to subscribe.");
             return;
         }
 
@@ -85,13 +84,10 @@ public class ChatService extends ChatServiceImplBase {
         String username = request.getUsername();
 
         if (!this.authenticatedClients.contains(chatSessionId)) {
-            IllegalArgumentException illegalArgumentException = new IllegalArgumentException("Cannot subscribe. Client not authenticated.");
-            responseObserver.onError(illegalArgumentException);
-            LOGGER.error("Cannot subscribe. Client not authenticated.", illegalArgumentException);
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot subscribe. Client not authenticated.")));
+            LOGGER.warn("Cannot subscribe. Client not authenticated.");
             return;
         }
-
-        // TODO: Check the DB for duplicate users/uuids.
 
         ChatSession chatSession = new ChatSession(chatSessionId, Context.current());
 
@@ -117,7 +113,7 @@ public class ChatService extends ChatServiceImplBase {
         UUID chatSessionId = UUID.fromString(request.getUuid());
 
         if (!this.connectedClients.containsKey(chatSessionId)) {
-            responseObserver.onError(new IllegalArgumentException("Cannot unsubscribe. Client does not exist."));
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot unsubscribe. Client does not exist.")));
             LOGGER.warn("Cannot unsubscribe. Client does not exist.");
             return;
         }
@@ -141,16 +137,16 @@ public class ChatService extends ChatServiceImplBase {
         Instant timestamp = Instant.now();
 
         if (!this.connectedClients.containsKey(senderSessionId)) {
-            responseObserver.onError(new IllegalArgumentException("Cannot send message. Client does not exist."));
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot send message. Client does not exist.")));
             LOGGER.warn("Cannot send message. Client does not exist.");
             return;
         }
 
         ChatSession senderChatSession = this.connectedClients.get(senderSessionId);
 
-        if (!senderChatSession.isSubscribed()) {
-            responseObserver.onError(new IllegalArgumentException("Cannot send message. Client is not subscribed."));
-            LOGGER.warn("Cannot send message. Client is not subscribed.");
+        if (!senderChatSession.isConnected()) {
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot send message. Client is not connected.")));
+            LOGGER.warn("Cannot send message. Client is not connected.");
             return;
         }
 
@@ -166,13 +162,9 @@ public class ChatService extends ChatServiceImplBase {
 
         try {
             // Broadcast the message to everyone, including the client which sent the message.
-            currentlyConnectedClients.forEach((id, chatSession) -> {
-                if (chatSession.isSubscribed()) {
-                    chatSession.sendMessage(newMessage);
-                }
-            });
+            currentlyConnectedClients.forEach((id, chatSession) -> chatSession.sendMessage(newMessage));
         } catch (Throwable throwable) {
-            responseObserver.onError(throwable);
+            responseObserver.onError(getStatusRuntimeException(throwable));
             LOGGER.error("Exception while sending message.", throwable);
         }
 
@@ -193,19 +185,12 @@ public class ChatService extends ChatServiceImplBase {
         UUID chatSessionId = UUID.fromString(request.getUuid());
 
         if (!this.connectedClients.containsKey(chatSessionId)) {
-            responseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("Cannot obtain subscribed user list. Client does not exist."))));
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot obtain subscribed user list. Client does not exist.")));
             LOGGER.info("Cannot obtain subscribed user list. Client does not exist.");
             return;
         }
 
         ChatSession chatSession = this.connectedClients.get(chatSessionId);
-
-        if (!chatSession.isSubscribed()) {
-            responseObserver.onError(new IllegalArgumentException("Cannot obtain subscribed user list. Client not subscribed."));
-            LOGGER.warn("Cannot obtain subscribed user list. Client not subscribed.");
-            return;
-        }
-
         chatSession.setSubscribedUserListResponseObserver(responseObserver);
     }
 
@@ -217,16 +202,11 @@ public class ChatService extends ChatServiceImplBase {
 
             List<User> userList = currentlyConnectedClients.entrySet().stream().map(chatSession -> User.newBuilder()
                 .setUsername(chatSession.getValue().getUsername())
-                .setSubscribed(chatSession.getValue().isSubscribed())
                 .build()).collect(Collectors.toList());
 
             SubscribedUsers subscribedUsers = SubscribedUsers.newBuilder().addAllUsers(userList).build();
             try {
-                currentlyConnectedClients.forEach((uuid, chatSession) -> {
-                    if (chatSession.isSubscribed()) {
-                        chatSession.publishSubscribedUserList(subscribedUsers);
-                    }
-                });
+                currentlyConnectedClients.forEach((uuid, chatSession) -> chatSession.publishSubscribedUserList(subscribedUsers));
             } catch (Throwable throwable) {
                 LOGGER.error("Exception while publishing subscribed users.", throwable);
             }
@@ -239,7 +219,7 @@ public class ChatService extends ChatServiceImplBase {
             Set<UUID> toRemove = new HashSet<>();
 
             this.connectedClients.forEach((uuid, chatSession) -> {
-                if (chatSession.remove()) {
+                if (!chatSession.isConnected()) {
                     toRemove.add(uuid);
                 }
             });
@@ -248,8 +228,14 @@ public class ChatService extends ChatServiceImplBase {
                 LOGGER.info("Removing disconnected client with ID: {}", uuid);
                 this.connectedClients.remove(uuid);
             });
-
         }, 0, 1000, TimeUnit.MILLISECONDS);
+    }
+
+    private StatusRuntimeException getStatusRuntimeException(Throwable throwable) {
+        return Status.INTERNAL
+            .withDescription(throwable.getMessage())
+            .withCause(throwable)
+            .asRuntimeException();
     }
 
     private boolean checkIfValidUUID(String uuid) {
