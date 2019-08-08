@@ -2,8 +2,8 @@ package com.angelomelonas.grpcwebchat.unit.service;
 
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.common.ChatSession;
+import io.grpc.Context;
 import org.junit.Test;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -17,7 +17,7 @@ public class ChatSessionTest {
     @Test
     public void sendMessageTest() {
         UUID sessionId = UUID.randomUUID();
-        ChatSession chatSession = new ChatSession(sessionId);
+        ChatSession chatSession = new ChatSession(sessionId, Context.current());
         MockStreamObserver streamObserver = new MockStreamObserver();
 
         String username = "RandomTestUsername123";
@@ -51,7 +51,7 @@ public class ChatSessionTest {
     @Test
     public void unsubscribeNoSubscriptionExceptionTest() {
         UUID sessionId = UUID.randomUUID();
-        ChatSession chatSession = new ChatSession(sessionId);
+        ChatSession chatSession = new ChatSession(sessionId, Context.current());
 
         Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
         String expectedExceptionMessage = "Cannot unsubscribe. Session not subscribed.";
