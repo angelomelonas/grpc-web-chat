@@ -18,10 +18,7 @@
           v-if="user.getUsername() != username"
           :key="user.getUsername()"
         >
-          <v-icon
-            :style="{ color: user.getSubscribed() ? '#a5d6a7' : '#ffab91' }"
-            >fiber_manual_record</v-icon
-          >
+          <v-icon :style="{ color: '#a5d6a7' }">fiber_manual_record</v-icon>
           <v-list-item-content>
             <v-list-item-title v-text="user.getUsername()"></v-list-item-title>
           </v-list-item-content>
