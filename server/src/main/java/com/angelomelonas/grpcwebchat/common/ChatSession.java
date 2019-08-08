@@ -2,6 +2,7 @@ package com.angelomelonas.grpcwebchat.common;
 
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.SubscribedUsers;
+import io.grpc.Context;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -16,12 +17,16 @@ public class ChatSession {
     private UUID sessionId;
     private String username;
     private volatile boolean isSubscribed;
+    private Context currentContext;
     private StreamObserver<Message> subscriptionResponseObserver;
     private StreamObserver<SubscribedUsers> usersListResponseObserver;
+    private boolean remove;
 
-    public ChatSession(UUID sessionId) {
+    public ChatSession(UUID sessionId, Context currentContext) {
         this.sessionId = sessionId;
+        this.currentContext = currentContext;
         this.isSubscribed = false;
+        this.remove = false;
         LOGGER.info("ChatSession with UUID {} has been created.", sessionId);
     }
 
@@ -70,7 +75,13 @@ public class ChatSession {
 
     public synchronized void sendMessage(Message newMessage) {
         if (!this.isSubscribed) {
-            LOGGER.info("Client not subscribed. Cannot send message to client with session ID {}.", this.sessionId);
+            LOGGER.warn("Client not subscribed. Cannot send message to client with session ID {}.", this.sessionId);
+            return;
+        }
+
+        if (this.currentContext.isCancelled()) {
+            LOGGER.warn("Client not connected. Cannot send message to client with session ID {}.", this.sessionId);
+            this.remove = true;
             return;
         }
 
@@ -86,7 +97,6 @@ public class ChatSession {
     public void setSubscribedUserListResponseObserver(StreamObserver<SubscribedUsers> responseObserver) {
         if (!this.isSubscribed) {
             LOGGER.warn("Client not subscribed. Client with session ID {} cannot obtain list of subscribed users.", this.sessionId);
-            // TODO: Investigate
             responseObserver.onCompleted();
             return;
         }
@@ -95,7 +105,13 @@ public class ChatSession {
 
     public synchronized void publishSubscribedUserList(SubscribedUsers subscribedUsers) {
         if (!this.isSubscribed || this.usersListResponseObserver == null) {
-            LOGGER.info("Client not subscribed. Cannot publish list of subscribed clients to client with session ID {}.", this.sessionId);
+            LOGGER.warn("Client not subscribed. Cannot publish list of subscribed clients to client with session ID {}.", this.sessionId);
+            return;
+        }
+
+        if (this.currentContext.isCancelled()) {
+            LOGGER.warn("Client not connected. Cannot publish list of subscribed clients to client with session ID {}.", this.sessionId);
+            this.remove = true;
             return;
         }
 
@@ -116,5 +132,9 @@ public class ChatSession {
 
     public synchronized boolean isSubscribed() {
         return this.isSubscribed;
+    }
+
+    public boolean remove() {
+        return this.remove;
     }
 }
