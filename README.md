@@ -10,7 +10,7 @@ A simple project demonstrating how both a Go and Java back end can power the sam
 
 ## Overview
 
-![gRPC-Web Overview](https://i.ibb.co/YPw20rx/grpc-diagram.png)
+![gRPC-Web Overview](https://i.ibb.co/bWjrTzb/grpc-diagram.png)
 
 ## Project Branches
 The root of the project contains the shared API and client code. Checkout the relevant server branch in your language of choice. 

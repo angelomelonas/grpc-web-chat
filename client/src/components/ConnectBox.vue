@@ -14,6 +14,8 @@
           :value="username"
           :disabled="isSubscribed"
           @input="setUsername"
+          @keydown.enter.exact.prevent
+          @keyup.enter.exact="subscribe()"
         />
       </v-col>
 
