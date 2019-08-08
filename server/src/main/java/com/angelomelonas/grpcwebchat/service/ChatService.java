@@ -89,6 +89,13 @@ public class ChatService extends ChatServiceImplBase {
             return;
         }
 
+        // TODO: Duplicate usernames are currently not allowed This can potentially be improved by removing Session UUIDs as primary keys or by removing users when they disconnect.
+        if(chatRepository.doesUserExist(username)){
+            responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot subscribe. Username already taken.")));
+            LOGGER.warn("Cannot subscribe. Username already taken.");
+            return;
+        }
+
         ChatSession chatSession = new ChatSession(chatSessionId, Context.current());
 
         connectedClients.put(chatSessionId, chatSession);

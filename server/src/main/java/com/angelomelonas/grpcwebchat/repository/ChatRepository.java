@@ -43,4 +43,10 @@ public class ChatRepository {
 
         return template.queryForObject(query, new Object[]{sessionId}, Integer.class) > 0;
     }
+
+    public boolean doesUserExist(String username) {
+        String query = "SELECT count(*) FROM User WHERE username = ?";
+
+        return template.queryForObject(query, new Object[]{username}, Integer.class) > 0;
+    }
 }
