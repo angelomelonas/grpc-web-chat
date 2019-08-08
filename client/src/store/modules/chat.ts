@@ -127,7 +127,7 @@ class ChatModule extends VuexModule {
 
     subscriptionRequest.setUuid(this.getSessionId);
     subscriptionRequest.setUsername(this.getUsername);
-
+    console.log("Subscribe!");
     this.chatServiceClient
       .subscribe(subscriptionRequest)
       .on("data", (message: Message) => {
@@ -146,6 +146,11 @@ class ChatModule extends VuexModule {
       })
       .on("error", (error: grpcWeb.Error) => {
         this.setSubscription(false);
+        this.appendMessage({
+          timestamp: moment().unix(),
+          username: "Server",
+          message: error.message
+        });
         console.error(error);
       })
       .on("end", () => {
@@ -161,18 +166,26 @@ class ChatModule extends VuexModule {
     this.chatServiceClient.unsubscribe(
       unsubscriptionRequest,
       {},
-      (err: grpcWeb.Error, unsubscriptionResponse: UnsubscriptionResponse) => {
+      (
+        error: grpcWeb.Error,
+        unsubscriptionResponse: UnsubscriptionResponse
+      ) => {
         if (unsubscriptionResponse) {
-          this.setSubscription(false);
           this.appendMessage({
             timestamp: moment().unix(),
             username: "Server",
             message: unsubscriptionResponse.getMessage()
           });
         }
-        if (err) {
-          console.error(err);
+        if (error) {
+          this.appendMessage({
+            timestamp: moment().unix(),
+            username: "Server",
+            message: error.message
+          });
+          console.error(error);
         }
+        this.setSubscription(false);
       }
     );
   }
@@ -188,13 +201,15 @@ class ChatModule extends VuexModule {
     this.chatServiceClient.sendMessage(
       messageRequest,
       {},
-      (err: grpcWeb.Error, messageResponse: MessageResponse) => {
+      (error: grpcWeb.Error, messageResponse: MessageResponse) => {
         if (messageResponse) {
-          console.log("Message received: " + messageResponse.getMessage());
+          console.log(
+            "Message received on server: " + messageResponse.getMessage()
+          );
         }
 
-        if (err) {
-          console.error(err);
+        if (error) {
+          console.error(error);
         }
       }
     );
@@ -209,7 +224,6 @@ class ChatModule extends VuexModule {
     this.chatServiceClient
       .subscribedUserList(subscribedUsersRequest)
       .on("data", (subscribedUsers: SubscribedUsers) => {
-        console.log("Subscribed list received!");
         this.setSubscribedUsersList(subscribedUsers.getUsersList());
       })
       .on("error", (error: grpcWeb.Error) => {

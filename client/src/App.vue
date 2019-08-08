@@ -44,21 +44,6 @@ export default class App extends Vue {
 
     // Authenticate the client.
     chat.authenticate();
-
-    // If the window is closed or reloaded, unsubscribe.
-    window.addEventListener("beforeunload", this.onClose);
-  }
-
-  private destroyed(): void {
-    if (chat.isSubscribed) {
-      chat.unsubscribe();
-    }
-  }
-
-  private onClose(): void {
-    if (chat.isSubscribed) {
-      chat.unsubscribe();
-    }
   }
 }
 </script>

@@ -90,5 +90,4 @@ message SubscribedUsers {
 
 message User {
     string username = 1;
-    bool subscribed = 2;
 }
