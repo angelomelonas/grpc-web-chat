@@ -1,47 +1,44 @@
 <template>
-  <v-container class="pa-2 pb-1">
-    <v-row class="fill-height" align="center" justify="center">
-      <v-col cols="10">
-        <v-text-field
-          label="Username"
-          placeholder="Your username here..."
-          filled
-          maxlength="64"
-          minlength="4"
-          hide-details
-          autofocus
-          prepend-icon="account_circle"
-          :value="username"
-          :disabled="isSubscribed"
-          @input="setUsername"
-          @keydown.enter.exact.prevent
-          @keyup.enter.exact="subscribe()"
-        />
-      </v-col>
+  <v-row class="fill-height" align="center" justify="center">
+    <v-col cols="10">
+      <v-text-field
+        label="Username"
+        placeholder="Your username here..."
+        filled
+        maxlength="64"
+        minlength="4"
+        hide-details
+        autofocus
+        prepend-icon="account_circle"
+        :value="username"
+        :disabled="isSubscribed"
+        @input="setUsername"
+        @keydown.enter.exact.prevent
+        @keyup.enter.exact="subscribe()"
+      />
+    </v-col>
+    <v-col cols="2">
+      <v-btn
+        v-if="!isSubscribed"
+        color="success"
+        :disabled="username.length < 4"
+        large
+        @click="subscribe()"
+      >
+        Subscribe
+      </v-btn>
 
-      <v-col cols="2">
-        <v-btn
-          v-if="!isSubscribed"
-          color="success"
-          :disabled="username.length < 4"
-          large
-          @click="subscribe()"
-        >
-          Subscribe
-        </v-btn>
-
-        <v-btn
-          v-else
-          color="error"
-          :disabled="username.length < 4 || username.length > 64"
-          large
-          @click="unsubscribe()"
-        >
-          Unsubscribe
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-container>
+      <v-btn
+        v-else
+        color="error"
+        :disabled="username.length < 4 || username.length > 64"
+        large
+        @click="unsubscribe()"
+      >
+        Unsubscribe
+      </v-btn>
+    </v-col>
+  </v-row>
 </template>
 
 <script lang="ts">
