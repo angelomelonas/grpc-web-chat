@@ -1,43 +1,44 @@
 <template>
-  <v-container pa-2 pb-1>
-    <v-layout align-center justify-center row fill-height>
-      <v-flex xs12>
-        <v-text-field
-          label="Username"
-          placeholder="Your username here..."
-          outline
-          maxlength="64"
-          minlength="4"
-          hide-details
-          autofocus
-          prepend-icon="account_circle"
-          :value="username"
-          @input="setUsername"
-          :disabled="isSubscribed"
-        ></v-text-field>
-      </v-flex>
+  <v-row class="fill-height" align="center" justify="center">
+    <v-col cols="10">
+      <v-text-field
+        label="Username"
+        placeholder="Your username here..."
+        filled
+        maxlength="64"
+        minlength="4"
+        hide-details
+        autofocus
+        prepend-icon="account_circle"
+        :value="username"
+        :disabled="isSubscribed"
+        @input="setUsername"
+        @keydown.enter.exact.prevent
+        @keyup.enter.exact="subscribe()"
+      />
+    </v-col>
+    <v-col cols="2">
+      <v-btn
+        v-if="!isSubscribed"
+        color="success"
+        :disabled="username.length < 4"
+        large
+        @click="subscribe()"
+      >
+        Subscribe
+      </v-btn>
 
-      <v-flex>
-        <v-btn
-          v-if="!isSubscribed"
-          color="success"
-          @click="subscribe()"
-          :disabled="username.length < 4"
-          large
-          >Subscribe
-        </v-btn>
-
-        <v-btn
-          v-else
-          color="error"
-          @click="unsubscribe()"
-          :disabled="username.length < 4 || username.length > 64"
-          large
-          >Unsubscribe
-        </v-btn>
-      </v-flex>
-    </v-layout>
-  </v-container>
+      <v-btn
+        v-else
+        color="error"
+        :disabled="username.length < 4 || username.length > 64"
+        large
+        @click="unsubscribe()"
+      >
+        Unsubscribe
+      </v-btn>
+    </v-col>
+  </v-row>
 </template>
 
 <script lang="ts">

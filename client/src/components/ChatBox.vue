@@ -1,18 +1,16 @@
 <template>
-  <v-container pa-2>
-    <v-textarea
-      outline
-      hide-details
-      clearable
-      no-resize
-      single-line
-      flat
-      height="480"
-      name="input-7-4"
-      readonly
-      v-model="messages"
-    ></v-textarea>
-  </v-container>
+  <v-textarea
+    v-model="messages"
+    filled
+    hide-details
+    clearable
+    no-resize
+    single-line
+    flat
+    height="480"
+    name="input-7-4"
+    readonly
+  />
 </template>
 
 <script lang="ts">

@@ -1,0 +1,8 @@
+version: '3'
+services:
+
+  envoy:
+    build:
+      context: envoy
+    ports:
+      - "8080:8080"
