@@ -49,4 +49,10 @@ public class ChatRepository {
 
         return template.queryForObject(query, new Object[]{username}, Integer.class) > 0;
     }
+
+    public int messagesBySessionId(UUID sessionId) {
+        String query = "SELECT count(*) FROM Message WHERE sessionId = ?";
+
+        return template.queryForObject(query, new Object[]{sessionId}, Integer.class);
+    }
 }

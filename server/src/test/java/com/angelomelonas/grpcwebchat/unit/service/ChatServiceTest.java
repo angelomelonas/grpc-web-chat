@@ -5,15 +5,17 @@ import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
 import com.angelomelonas.grpcwebchat.Chat.MessageResponse;
+import com.angelomelonas.grpcwebchat.Chat.SubscribedUsersRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
 import com.angelomelonas.grpcwebchat.service.ChatService;
+import io.grpc.StatusRuntimeException;
 import org.junit.Test;
 
+import java.util.Random;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -36,8 +38,8 @@ public class ChatServiceTest {
         chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "RandomUsername123";
-        final String message = "User " + username + " has subscribed.";
+        final String username = "RandomUsername" + randomSuffix(8);
+        final String message = "Welcome to gRPC Web Chat, " + username;
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
 
@@ -46,16 +48,16 @@ public class ChatServiceTest {
         final AuthenticationResponse authenticationResponse = (AuthenticationResponse) streamObserver.response;
 
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(authenticationResponse.getUuid())
-                .setUsername(username)
-                .build();
+            .setUuid(authenticationResponse.getUuid())
+            .setUsername(username)
+            .build();
 
         chatService.subscribe(subscriptionRequest, streamObserver);
 
         final Message expectedMessageResponse = Message.newBuilder()
-                .setUsername("Server")
-                .setMessage(message)
-                .build();
+            .setUsername(ChatService.SERVER_NAME)
+            .setMessage(message)
+            .build();
 
         assertEquals(expectedMessageResponse.getMessage(), ((Message) streamObserver.response).getMessage());
         assertEquals(expectedMessageResponse.getUsername(), ((Message) streamObserver.response).getUsername());
@@ -68,7 +70,7 @@ public class ChatServiceTest {
         chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "RandomUsername123";
+        final String username = "RandomUsername" + randomSuffix(8);
         final String message = "User " + username + " has unsubscribed.";
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
@@ -78,22 +80,28 @@ public class ChatServiceTest {
         final AuthenticationResponse authenticationResponse = (AuthenticationResponse) streamObserver.response;
 
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(authenticationResponse.getUuid())
-                .setUsername(username)
-                .build();
+            .setUuid(authenticationResponse.getUuid())
+            .setUsername(username)
+            .build();
 
         chatService.subscribe(subscriptionRequest, streamObserver);
 
+        final SubscribedUsersRequest subscribedUsersRequest = SubscribedUsersRequest.newBuilder()
+            .setUuid(authenticationResponse.getUuid())
+            .build();
+
+        chatService.subscribedUserList(subscribedUsersRequest, streamObserver);
+
         final UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                .setUuid(authenticationResponse.getUuid())
-                .build();
+            .setUuid(authenticationResponse.getUuid())
+            .build();
 
         chatService.unsubscribe(unsubscriptionRequest, streamObserver);
 
         final UnsubscriptionResponse expectedMessageResponse = UnsubscriptionResponse.newBuilder()
-                .setUuid(authenticationResponse.getUuid())
-                .setMessage(message)
-                .build();
+            .setUuid(authenticationResponse.getUuid())
+            .setMessage(message)
+            .build();
 
         assertEquals(expectedMessageResponse.getMessage(), ((UnsubscriptionResponse) streamObserver.response).getMessage());
         assertTrue(streamObserver.onCompletedCalled);
@@ -105,7 +113,7 @@ public class ChatServiceTest {
         chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "Random Username 123";
+        final String username = "RandomUsername" + randomSuffix(8);
         final String message = "A random test message.";
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
@@ -115,23 +123,23 @@ public class ChatServiceTest {
         AuthenticationResponse authenticationResponse = (AuthenticationResponse) streamObserver.response;
 
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(authenticationResponse.getUuid())
-                .setUsername(username)
-                .build();
+            .setUuid(authenticationResponse.getUuid())
+            .setUsername(username)
+            .build();
 
         chatService.subscribe(subscriptionRequest, streamObserver);
 
         final MessageRequest messageRequest = MessageRequest.newBuilder()
-                .setUuid(authenticationResponse.getUuid())
-                .setUsername(username)
-                .setMessage(message)
-                .build();
+            .setUuid(authenticationResponse.getUuid())
+            .setUsername(username)
+            .setMessage(message)
+            .build();
 
         chatService.sendMessage(messageRequest, streamObserver);
 
         final MessageResponse expectedMessageResponse = MessageResponse.newBuilder()
-                .setMessage("Message sent successfully.")
-                .build();
+            .setMessage("Message sent successfully.")
+            .build();
 
         assertEquals(expectedMessageResponse.getMessage(), ((MessageResponse) streamObserver.response).getMessage());
         assertTrue(streamObserver.onCompletedCalled);
@@ -143,20 +151,20 @@ public class ChatServiceTest {
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
         final UUID uuid = UUID.randomUUID();
-        final String username = "Random Username 123";
+        final String username = "RandomUsername" + randomSuffix(8);
 
-        final Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
+        final Class<StatusRuntimeException> expectedExceptionClass = StatusRuntimeException.class;
         final String expectedExceptionMessage = "Cannot subscribe. Client not authenticated.";
 
         final SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .build();
 
         chatService.subscribe(subscriptionRequest, streamObserver);
 
         assertEquals(expectedExceptionClass, streamObserver.error.getClass());
-        assertEquals(expectedExceptionMessage, streamObserver.error.getMessage());
+        assertEquals(expectedExceptionMessage, streamObserver.error.getCause().getMessage());
     }
 
     @Test
@@ -166,37 +174,22 @@ public class ChatServiceTest {
 
         final UUID uuid = UUID.randomUUID();
 
-        final Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
-        final String expectedExceptionMessage = "Cannot unsubscribe. Client not subscribed.";
+        final Class<StatusRuntimeException> expectedExceptionClass = StatusRuntimeException.class;
+        final String expectedExceptionMessage = "Cannot unsubscribe. Client does not exist.";
 
         final UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .build();
 
         chatService.unsubscribe(unsubscriptionRequest, streamObserver);
 
         assertEquals(expectedExceptionClass, streamObserver.error.getClass());
-        assertEquals(expectedExceptionMessage, streamObserver.error.getMessage());
+        assertEquals(expectedExceptionMessage, streamObserver.error.getCause().getMessage());
     }
 
-    @Test
-    public void sendMessageNoSubscriptionExceptionTest() {
-        final ChatService chatService = new ChatService();
-        final MockStreamObserver streamObserver = new MockStreamObserver();
-
-        final UUID uuid = UUID.randomUUID();
-
-        Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
-        String expectedExceptionMessage = "Cannot send message. ChatSession does not exist.";
-
-        final MessageRequest messageRequest = MessageRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername("RandomTestUsername123")
-                .setMessage("Random Test Message 123")
-                .build();
-
-        assertThatExceptionOfType(expectedExceptionClass)
-                .isThrownBy(() -> chatService.sendMessage(messageRequest, streamObserver))
-                .withMessage(expectedExceptionMessage);
+    private String randomSuffix(int length) {
+        byte[] array = new byte[length];
+        new Random().nextBytes(array);
+        return new String(array);
     }
 }

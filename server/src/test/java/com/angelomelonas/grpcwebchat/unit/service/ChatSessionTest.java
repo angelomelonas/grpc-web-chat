@@ -8,7 +8,6 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -25,19 +24,20 @@ public class ChatSessionTest {
         long timestamp = Instant.now().toEpochMilli();
 
         Message expectedMessageResponse = Message.newBuilder()
-                .setUsername(username)
-                .setMessage(message)
-                .setTimestamp(timestamp)
-                .build();
+            .setUsername(username)
+            .setMessage(message)
+            .setTimestamp(timestamp)
+            .build();
 
         chatSession.subscribe(username, streamObserver);
+        chatSession.setSubscribedUserListResponseObserver(streamObserver);
 
         Message newMessage = Message.newBuilder()
-                .setUuid(String.valueOf(sessionId))
-                .setUsername(username)
-                .setMessage(message)
-                .setTimestamp(timestamp)
-                .build();
+            .setUuid(String.valueOf(sessionId))
+            .setUsername(username)
+            .setMessage(message)
+            .setTimestamp(timestamp)
+            .build();
 
         chatSession.sendMessage(newMessage);
 
@@ -46,18 +46,5 @@ public class ChatSessionTest {
 
         chatSession.unsubscribe();
         assertTrue(streamObserver.onCompletedCalled);
-    }
-
-    @Test
-    public void unsubscribeNoSubscriptionExceptionTest() {
-        UUID sessionId = UUID.randomUUID();
-        ChatSession chatSession = new ChatSession(sessionId, Context.current());
-
-        Class<IllegalArgumentException> expectedExceptionClass = IllegalArgumentException.class;
-        String expectedExceptionMessage = "Cannot unsubscribe. Session not subscribed.";
-
-        assertThatExceptionOfType(expectedExceptionClass)
-                .isThrownBy(() -> chatSession.unsubscribe())
-                .withMessage(expectedExceptionMessage);
     }
 }

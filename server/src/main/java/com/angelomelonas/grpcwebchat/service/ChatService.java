@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
 public class ChatService extends ChatServiceImplBase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChatService.class);
 
+    public static final String SERVER_NAME = "Server";
+
     @Autowired
     ChatRepository chatRepository;
 
@@ -90,7 +92,7 @@ public class ChatService extends ChatServiceImplBase {
         }
 
         // TODO: Duplicate usernames are currently not allowed This can potentially be improved by removing Session UUIDs as primary keys or by removing users when they disconnect.
-        if(chatRepository.doesUserExist(username)){
+        if (chatRepository.doesUserExist(username)) {
             responseObserver.onError(getStatusRuntimeException(new IllegalArgumentException("Cannot subscribe. Username already taken.")));
             LOGGER.warn("Cannot subscribe. Username already taken.");
             return;
@@ -104,7 +106,7 @@ public class ChatService extends ChatServiceImplBase {
 
         final Message clientSubscribed = Message.newBuilder()
             .setUuid(request.getUuid())
-            .setUsername("Server")
+            .setUsername(SERVER_NAME)
             .setMessage("Welcome to gRPC Web Chat, " + username)
             .setTimestamp(Instant.now().toEpochMilli())
             .build();
@@ -238,7 +240,7 @@ public class ChatService extends ChatServiceImplBase {
         }, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
-    private StatusRuntimeException getStatusRuntimeException(Throwable throwable) {
+    public static StatusRuntimeException getStatusRuntimeException(Throwable throwable) {
         return Status.INTERNAL
             .withDescription(throwable.getMessage())
             .withCause(throwable)

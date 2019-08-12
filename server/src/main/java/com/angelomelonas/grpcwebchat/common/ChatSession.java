@@ -3,8 +3,6 @@ package com.angelomelonas.grpcwebchat.common;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.SubscribedUsers;
 import io.grpc.Context;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +46,7 @@ public class ChatSession {
             this.subscriptionResponseObserver.onCompleted();
             this.subscriptionResponseObserver = null;
         } catch (IllegalStateException exception) {
-            this.subscriptionResponseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("Failed to publish list of subscribed clients"))));
+            this.subscriptionResponseObserver.onError(new IllegalArgumentException("Failed to publish list of subscribed clients"));
             LOGGER.error("An error was thrown while trying to unsubscribe user with session ID {}.", this.sessionId, exception);
             throw exception;
         }
@@ -57,7 +55,7 @@ public class ChatSession {
             this.usersListResponseObserver.onCompleted();
             this.usersListResponseObserver = null;
         } catch (IllegalStateException exception) {
-            this.usersListResponseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list."))));
+            this.usersListResponseObserver.onError(new IllegalArgumentException("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list."));
             LOGGER.error("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list.", this.sessionId, exception);
             throw exception;
         }
@@ -98,7 +96,7 @@ public class ChatSession {
             this.usersListResponseObserver.onNext(subscribedUsers);
         } catch (IllegalStateException exception) {
             this.usersListResponseObserver = null;
-            this.usersListResponseObserver.onError(new StatusRuntimeException(Status.fromThrowable(new IllegalArgumentException("Failed to publish list of subscribed clients"))));
+            this.usersListResponseObserver.onError(new IllegalArgumentException("Failed to publish list of subscribed clients"));
             LOGGER.error("Failed to publish list of subscribed clients", exception);
             throw exception;
         }

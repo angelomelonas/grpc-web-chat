@@ -30,8 +30,9 @@ public class ChatRepositoryTest {
         String username = "RandomTestUsername123";
 
         chatRepository.addUser(sessionId, username);
-        // TODO: Elaborate on this test.
-        Assert.assertTrue(true);
+
+        Assert.assertTrue(chatRepository.doesSessionExist(sessionId));
+        Assert.assertTrue(chatRepository.doesUserExist(username));
     }
 
     @Test
@@ -41,9 +42,8 @@ public class ChatRepositoryTest {
         String message = "Random test message 123";
 
         chatRepository.addUser(sessionId, username);
-
         chatRepository.addMessage(sessionId, message, Instant.now());
-        // TODO: Elaborate on this test.
-        Assert.assertTrue(true);
+
+        Assert.assertEquals(1, chatRepository.messagesBySessionId(sessionId));
     }
 }
