@@ -4,6 +4,9 @@ import Vuetify from "vuetify/lib";
 const options = {
   theme: {
     dark: false,
+    options: {
+      customProperties: true
+    },
     themes: {
       light: {
         primary: "#1976D2",
