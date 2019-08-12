@@ -105,7 +105,7 @@ public class ChatService extends ChatServiceImplBase {
         final Message clientSubscribed = Message.newBuilder()
             .setUuid(request.getUuid())
             .setUsername("Server")
-            .setMessage("User " + username + " has subscribed.")
+            .setMessage("Welcome to gRPC Web Chat, " + username)
             .setTimestamp(Instant.now().toEpochMilli())
             .build();
 
