@@ -44,7 +44,6 @@ public class ChatSession {
         // Try to close the streams.
         try {
             this.subscriptionResponseObserver.onCompleted();
-            this.subscriptionResponseObserver = null;
         } catch (IllegalStateException exception) {
             this.subscriptionResponseObserver.onError(new IllegalArgumentException("Failed to publish list of subscribed clients"));
             LOGGER.error("An error was thrown while trying to unsubscribe user with session ID {}.", this.sessionId, exception);
@@ -53,7 +52,6 @@ public class ChatSession {
 
         try {
             this.usersListResponseObserver.onCompleted();
-            this.usersListResponseObserver = null;
         } catch (IllegalStateException exception) {
             this.usersListResponseObserver.onError(new IllegalArgumentException("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list."));
             LOGGER.error("An error was thrown while trying to unsubscribe user with session ID {} from subscribed clients list.", this.sessionId, exception);

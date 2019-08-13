@@ -2,6 +2,7 @@ package com.angelomelonas.grpcwebchat.unit.service;
 
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.common.ChatSession;
+import com.angelomelonas.grpcwebchat.integration.ChatTest;
 import io.grpc.Context;
 import org.junit.Test;
 
@@ -19,8 +20,8 @@ public class ChatSessionTest {
         ChatSession chatSession = new ChatSession(sessionId, Context.current());
         MockStreamObserver streamObserver = new MockStreamObserver();
 
-        String username = "RandomTestUsername123";
-        String message = "Random Test Message 123";
+        String username = "RandomTestUsername" + ChatTest.randomSuffixGenerator();
+        String message = "Random Test Message " + ChatTest.randomSuffixGenerator();
         long timestamp = Instant.now().toEpochMilli();
 
         Message expectedMessageResponse = Message.newBuilder()

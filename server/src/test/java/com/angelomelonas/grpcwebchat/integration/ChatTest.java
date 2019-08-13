@@ -5,10 +5,13 @@ import com.angelomelonas.grpcwebchat.Chat.AuthenticationResponse;
 import com.angelomelonas.grpcwebchat.Chat.Message;
 import com.angelomelonas.grpcwebchat.Chat.MessageRequest;
 import com.angelomelonas.grpcwebchat.Chat.MessageResponse;
+import com.angelomelonas.grpcwebchat.Chat.SubscribedUsers;
+import com.angelomelonas.grpcwebchat.Chat.SubscribedUsersRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
 import com.angelomelonas.grpcwebchat.ChatApplication;
+import com.angelomelonas.grpcwebchat.service.ChatService;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,8 +28,8 @@ import java.util.UUID;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(
-        properties = "spring.profiles.active=test",
-        classes = ChatApplication.class
+    properties = "spring.profiles.active=test",
+    classes = ChatApplication.class
 )
 @ActiveProfiles("test")
 public class ChatTest {
@@ -57,24 +60,36 @@ public class ChatTest {
         UUID uuid = UUID.fromString(authenticationResponse.getUuid());
         String username = "TestUsername" + randomSuffixGenerator();
 
+        // Subscribe to messages.
         SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .build();
 
-        StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
+        StreamObserverTestHelper<Message> messageStreamObserver = new StreamObserverTestHelper();
+        chatServiceTestClient.subscribe(subscriptionRequest, messageStreamObserver);
 
-        chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
         // Wait for the server to acknowledge the subscription.
-        Message subscriptionResponse = streamObserver.waitForOnNext().get();
+        Message subscriptionResponse = messageStreamObserver.waitForOnNext().get();
+
+        // Subscribe to the user list.
+        final SubscribedUsersRequest subscribedUsersRequest = SubscribedUsersRequest.newBuilder()
+            .setUuid(authenticationResponse.getUuid())
+            .build();
+
+        StreamObserverTestHelper<SubscribedUsers> subscribedUsersStreamObserver = new StreamObserverTestHelper();
+        chatServiceTestClient.subscribedUserList(subscribedUsersRequest, subscribedUsersStreamObserver);
+
+        // Wait for the server to acknowledge the subscription.
+        subscribedUsersStreamObserver.waitForOnNext().get();
 
         Assert.assertEquals(String.valueOf(uuid), subscriptionResponse.getUuid());
-        Assert.assertEquals("Server", subscriptionResponse.getUsername());
-        Assert.assertEquals("User " + username + " has subscribed.", subscriptionResponse.getMessage());
+        Assert.assertEquals(ChatService.SERVER_NAME, subscriptionResponse.getUsername());
+        Assert.assertEquals("Welcome to gRPC Web Chat, " + username, subscriptionResponse.getMessage());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .build();
 
         chatServiceTestClient.unsubscribe(unsubscriptionRequest);
     }
@@ -87,19 +102,31 @@ public class ChatTest {
         String username = "TestUsername" + randomSuffixGenerator();
 
         SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .build();
 
         StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
         chatServiceTestClient.subscribe(subscriptionRequest, streamObserver);
+
         // Wait for the server to acknowledge the subscription.
         streamObserver.waitForOnNext();
 
+        // Subscribe to the user list.
+        final SubscribedUsersRequest subscribedUsersRequest = SubscribedUsersRequest.newBuilder()
+            .setUuid(authenticationResponse.getUuid())
+            .build();
+
+        StreamObserverTestHelper<SubscribedUsers> subscribedUsersStreamObserver = new StreamObserverTestHelper();
+        chatServiceTestClient.subscribedUserList(subscribedUsersRequest, subscribedUsersStreamObserver);
+
+        // Wait for the server to acknowledge the subscription.
+        subscribedUsersStreamObserver.waitForOnNext().get();
+
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .build();
 
         UnsubscriptionResponse unsubscriptionResponse = chatServiceTestClient.unsubscribe(unsubscriptionRequest);
 
@@ -118,9 +145,9 @@ public class ChatTest {
         String message = "Test Message " + randomSuffixGenerator();
 
         SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .build();
 
         StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
@@ -129,11 +156,22 @@ public class ChatTest {
         // Wait for the server to acknowledge the subscription.
         streamObserver.waitForOnNext().get();
 
+        // Subscribe to the user list.
+        final SubscribedUsersRequest subscribedUsersRequest = SubscribedUsersRequest.newBuilder()
+            .setUuid(authenticationResponse.getUuid())
+            .build();
+
+        StreamObserverTestHelper<SubscribedUsers> subscribedUsersStreamObserver = new StreamObserverTestHelper();
+        chatServiceTestClient.subscribedUserList(subscribedUsersRequest, subscribedUsersStreamObserver);
+
+        // Wait for the server to acknowledge the subscription.
+        subscribedUsersStreamObserver.waitForOnNext().get();
+
         MessageRequest messageRequest = MessageRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .setMessage(message)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .setMessage(message)
+            .build();
 
         // Send the message.
         MessageResponse messageResponse = chatServiceTestClient.sendMessage(messageRequest);
@@ -142,8 +180,8 @@ public class ChatTest {
         Assert.assertEquals("Message sent successfully.", messageResponse.getMessage());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .build();
 
         chatServiceTestClient.unsubscribe(unsubscriptionRequest);
 
@@ -159,9 +197,9 @@ public class ChatTest {
         String message = "Test Message " + randomSuffixGenerator();
 
         SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .build();
 
         StreamObserverTestHelper<Message> streamObserver = new StreamObserverTestHelper();
 
@@ -170,11 +208,22 @@ public class ChatTest {
         // Wait for the server to acknowledge the subscription.
         streamObserver.waitForOnNext().get();
 
+        // Subscribe to the user list.
+        final SubscribedUsersRequest subscribedUsersRequest = SubscribedUsersRequest.newBuilder()
+            .setUuid(authenticationResponse.getUuid())
+            .build();
+
+        StreamObserverTestHelper<SubscribedUsers> subscribedUsersStreamObserver = new StreamObserverTestHelper();
+        chatServiceTestClient.subscribedUserList(subscribedUsersRequest, subscribedUsersStreamObserver);
+
+        // Wait for the server to acknowledge the subscription.
+        subscribedUsersStreamObserver.waitForOnNext().get();
+
         MessageRequest messageRequest = MessageRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .setUsername(username)
-                .setMessage(message)
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .setUsername(username)
+            .setMessage(message)
+            .build();
 
         // Send the message.
         chatServiceTestClient.sendMessage(messageRequest);
@@ -187,8 +236,8 @@ public class ChatTest {
         Assert.assertEquals(username, receivedMessage.getUsername());
 
         UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                .setUuid(String.valueOf(uuid))
-                .build();
+            .setUuid(String.valueOf(uuid))
+            .build();
 
         chatServiceTestClient.unsubscribe(unsubscriptionRequest);
 
@@ -223,13 +272,15 @@ public class ChatTest {
     private class SimulatedClient extends Thread {
         private String[] messagesToSend;
         private final int totalMessageCount;
-        private final StreamObserverTestHelper<Message> streamObserver;
+        private final StreamObserverTestHelper<Message> messageStreamObserver;
+        private final StreamObserverTestHelper<SubscribedUsers> subscribedUsersStreamObserver;
         private List<Message> receivedMessages;
 
         SimulatedClient(String[] messagesToSend, int totalMessageCount) {
             this.messagesToSend = messagesToSend;
             this.totalMessageCount = totalMessageCount;
-            this.streamObserver = new StreamObserverTestHelper<>();
+            this.messageStreamObserver = new StreamObserverTestHelper<>();
+            this.subscribedUsersStreamObserver = new StreamObserverTestHelper<>();
             this.receivedMessages = new ArrayList<>();
         }
 
@@ -241,34 +292,44 @@ public class ChatTest {
             String username = "TestUsername" + randomSuffixGenerator();
 
             SubscriptionRequest subscriptionRequest = SubscriptionRequest.newBuilder()
-                    .setUuid(String.valueOf(uuid))
-                    .setUsername(username)
-                    .build();
+                .setUuid(String.valueOf(uuid))
+                .setUsername(username)
+                .build();
 
-            chatServiceTestClient.subscribe(subscriptionRequest, this.streamObserver);
+            chatServiceTestClient.subscribe(subscriptionRequest, this.messageStreamObserver);
 
             // Wait for the server to acknowledge the subscription.
-            this.streamObserver.waitForOnNext();
+            this.messageStreamObserver.waitForOnNext();
+
+            // Subscribe to the user list.
+            final SubscribedUsersRequest subscribedUsersRequest = SubscribedUsersRequest.newBuilder()
+                .setUuid(authenticationResponse.getUuid())
+                .build();
+
+            chatServiceTestClient.subscribedUserList(subscribedUsersRequest, this.subscribedUsersStreamObserver);
+
+            // Wait for the server to acknowledge the subscription.
+            this.subscribedUsersStreamObserver.waitForOnNext().get();
 
             // Send all the messages.
             for (String message : messagesToSend) {
                 MessageRequest messageRequest = MessageRequest.newBuilder()
-                        .setUuid(String.valueOf(uuid))
-                        .setUsername(username)
-                        .setMessage(message)
-                        .build();
+                    .setUuid(String.valueOf(uuid))
+                    .setUsername(username)
+                    .setMessage(message)
+                    .build();
 
                 chatServiceTestClient.sendMessage(messageRequest);
             }
 
             // Wait for all messages to be received.
             for (int i = 0; i < totalMessageCount; i++) {
-                this.receivedMessages.add(this.streamObserver.waitForOnNextN().get());
+                this.receivedMessages.add(this.messageStreamObserver.waitForOnNextN().get());
             }
 
             UnsubscriptionRequest unsubscriptionRequest = UnsubscriptionRequest.newBuilder()
-                    .setUuid(String.valueOf(uuid))
-                    .build();
+                .setUuid(String.valueOf(uuid))
+                .build();
 
             chatServiceTestClient.unsubscribe(unsubscriptionRequest);
         }
@@ -278,7 +339,7 @@ public class ChatTest {
         }
     }
 
-    private String randomSuffixGenerator() {
-        return " " + (new Random().nextInt(10000));
+    public static String randomSuffixGenerator() {
+        return " " + (new Random().nextInt(1000000));
     }
 }

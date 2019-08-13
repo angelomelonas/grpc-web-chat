@@ -9,11 +9,11 @@ import com.angelomelonas.grpcwebchat.Chat.SubscribedUsersRequest;
 import com.angelomelonas.grpcwebchat.Chat.SubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionRequest;
 import com.angelomelonas.grpcwebchat.Chat.UnsubscriptionResponse;
+import com.angelomelonas.grpcwebchat.integration.ChatTest;
 import com.angelomelonas.grpcwebchat.service.ChatService;
 import io.grpc.StatusRuntimeException;
 import org.junit.Test;
 
-import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +38,7 @@ public class ChatServiceTest {
         chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "RandomUsername" + randomSuffix(8);
+        final String username = "RandomUsername" + ChatTest.randomSuffixGenerator();
         final String message = "Welcome to gRPC Web Chat, " + username;
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
@@ -70,7 +70,7 @@ public class ChatServiceTest {
         chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "RandomUsername" + randomSuffix(8);
+        final String username = "RandomUsername" + ChatTest.randomSuffixGenerator();
         final String message = "User " + username + " has unsubscribed.";
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
@@ -113,8 +113,8 @@ public class ChatServiceTest {
         chatService.setChatRepository(new MockChatRepository());
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
-        final String username = "RandomUsername" + randomSuffix(8);
-        final String message = "A random test message.";
+        final String username = "RandomUsername" + ChatTest.randomSuffixGenerator();
+        final String message = "A random test message " + ChatTest.randomSuffixGenerator();
 
         final AuthenticationRequest authenticationRequest = AuthenticationRequest.newBuilder().build();
 
@@ -151,7 +151,7 @@ public class ChatServiceTest {
         final MockStreamObserver streamObserver = new MockStreamObserver();
 
         final UUID uuid = UUID.randomUUID();
-        final String username = "RandomUsername" + randomSuffix(8);
+        final String username = "RandomUsername" + ChatTest.randomSuffixGenerator();
 
         final Class<StatusRuntimeException> expectedExceptionClass = StatusRuntimeException.class;
         final String expectedExceptionMessage = "Cannot subscribe. Client not authenticated.";
@@ -185,11 +185,5 @@ public class ChatServiceTest {
 
         assertEquals(expectedExceptionClass, streamObserver.error.getClass());
         assertEquals(expectedExceptionMessage, streamObserver.error.getCause().getMessage());
-    }
-
-    private String randomSuffix(int length) {
-        byte[] array = new byte[length];
-        new Random().nextBytes(array);
-        return new String(array);
     }
 }
