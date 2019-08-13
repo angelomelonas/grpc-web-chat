@@ -127,7 +127,6 @@ class ChatModule extends VuexModule {
 
     subscriptionRequest.setUuid(this.getSessionId);
     subscriptionRequest.setUsername(this.getUsername);
-    console.log("Subscribe!");
     this.chatServiceClient
       .subscribe(subscriptionRequest)
       .on("data", (message: Message) => {
