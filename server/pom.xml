@@ -69,6 +69,25 @@
         </extensions>
         <plugins>
             <plugin>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <executions>
+                    <execution><!-- Run the create-cert.sh script to generate certificates. -->
+                        <id>Generate Certificates</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <commandlineArgs>create-cert.sh</commandlineArgs>
+                            <workingDirectory>${project.parent.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
