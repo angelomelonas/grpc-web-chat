@@ -1,4 +1,5 @@
 /src/main/resources/public/
+/src/main/resources/keystore/
 /target
 
 !.mvn/wrapper/maven-wrapper.jar
