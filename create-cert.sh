@@ -13,28 +13,48 @@ UNIT=ExampleCoSecurityDepartment
 CA_CN_NAME=example-ca.com
 CN_NAME=ExampleCoCN
 EMAIL=security@example.com
-PASS=1234
+PASS=123456
+
+CERT_OUT_DIR=keystore
+CERT_OUT_ENVOY=envoy/certificates
+CERT_OUT_CLIENT=client/certificates
 
 # Certificate Authority
-echo ------------ Generate CA key: ------------
- openssl genrsa -des3 -passout pass:${PASS} -out envoy/certificates/ca.key 2048
+echo Generating CA key...
+openssl genrsa -des3 -passout pass:${PASS} \
+        -out ${CERT_OUT_DIR}/ca.key 2048
 
-echo ------------ Generate CA certificate: ------------
-openssl req -new -x509 -passin pass:${PASS} -days 365 -key envoy/certificates/ca.key -out envoy/certificates/ca.crt -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CA_CN_NAME}"
+echo Generating CA cetificate...
+openssl req -new -x509 -passin pass:${PASS} -days 365 -key ${CERT_OUT_DIR}/ca.key \
+        -out ${CERT_OUT_DIR}/ca.crt -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CA_CN_NAME}"
 
 # Server side key
-echo ------------ Generate server key: ------------
-openssl genrsa -des3 -passout pass:${PASS} -out envoy/certificates/server.key 2048
+echo Generate server key...
+openssl genrsa -des3 -passout pass:${PASS} \
+        -out ${CERT_OUT_DIR}/server.key 2048
 
-echo ------------ Generate server signing request: ------------
-openssl req -new -passin pass:${PASS} -key envoy/certificates/server.key -out envoy/certificates/server.csr -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CN_NAME}"
+echo Generating server signing request...
+openssl req -new -passin pass:${PASS} -key ${CERT_OUT_DIR}/server.key \
+        -out ${CERT_OUT_DIR}/server.csr -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CN_NAME}"
 
-echo ------------ Server certificate: ------------
-openssl x509 -req -passin pass:${PASS} -days 365 -in envoy/certificates/server.csr -CA envoy/certificates/ca.crt -CAkey envoy/certificates/ca.key -set_serial 01 -out envoy/certificates/server.crt -sha256 -extfile v3.ext
+echo Generating server certificate...
+openssl x509 -req -passin pass:${PASS} -days 365 -in ${CERT_OUT_DIR}/server.csr \
+        -CA ${CERT_OUT_DIR}/ca.crt -CAkey ${CERT_OUT_DIR}/ca.key -set_serial 01 \
+        -out ${CERT_OUT_DIR}/server.crt -sha256 -extfile ${CERT_OUT_DIR}/config/v3.ext
 
-echo ------------ Remove passphrase from server key: ------------
-openssl rsa -passin pass:${PASS} -in envoy/certificates/server.key -out envoy/certificates/server.key
+# Remove servery key passphrase
+echo Removing passphrase from server key...
+openssl rsa -passin pass:${PASS} -in ${CERT_OUT_DIR}/server.key \
+        -out ${CERT_OUT_DIR}/server.key
 
-echo ------------ Copy key and cert to client for dev server: ------------
-cp -rf envoy/certificates/server.key client/certificates/server.key
-cp -rf envoy/certificates/server.crt client/certificates/server.crt
+# Copy certificates to client file server and Envoy
+echo Copying server key and server certificate to client file server...
+cp -rf ${CERT_OUT_DIR}/server.key ${CERT_OUT_CLIENT}/server.key
+cp -rf ${CERT_OUT_DIR}/server.crt ${CERT_OUT_CLIENT}/server.crt
+
+echo Copying server key and server certificate to Envoy...
+cp -rf ${CERT_OUT_DIR}/server.key ${CERT_OUT_ENVOY}/server.key
+cp -rf ${CERT_OUT_DIR}/server.crt ${CERT_OUT_ENVOY}/server.crt
+
+echo Done! Closing in 3 seconds...
+sleep 3

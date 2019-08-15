@@ -42,17 +42,24 @@ master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
 
 #### Java
 1. Checkout the `java-dev-stable` branch.
-2. Execute `mvn clean install` in the root directory to build and compile the project. This will also generate all the necessary Protocol Buffer files for the backend and frontend.
-3. Simply run the `ChatApplication.java` as a normal Java application. This will start the server. See the `resources/application.properties` file for server configuration details.
+2. Execute `mvn clean install` in the root directory to build and compile the project. 
+    * This will generate all the necessary Protocol Buffer files for the backend and frontend.
+    * This will execute the `create-cert.sh` script, generating all necessary keys and certificates for the Vue development server and the Envoy Proxy.
+3. To serve the Vue files on the Spring Boot server for production, execute the `create-cert-java.sh` script.
+4. Simply run the `ChatApplication.java` as a normal Java application. This will start the server. See the `resources/application.properties` file for server configuration details.
 
 #### Go
 1. Checkout the `go-dev-stable` branch.
-2. _TODO: Implement..._
+2. _TODO: Run gradle install/build script that builds files, generates protos, etc._ 
+3. To serve the Vue files on the Spring Boot server for production, execute the `create-cert-java.sh` script.
+4. _TODO: Run the Go server somehow..._
 
 ### Envoy Proxy
-1. From the root directory, run the `create-cert.sh` script. See the `envoy/README.md` file for more details.
-2. Run `docker-compose up` to start the Envoy proxy.
+1. From the root directory, run the `create-cert.sh` script. See the `envoy/README.md` file for more details. 
+    * **Note**: This step should be unnecessary for the Java project.
+2. Run `docker-compose up` from the root directory to start the Envoy proxy.
 
-### Client
-1. Run `npm install` and then `npm run proto` (NOTE: This step is unnecessary after running the `mvn` command for the Java server).
-2. Run `npm run serve` to start the development server.
+### Client Development Server
+1. Run `npm install` and then `npm run proto`.
+    * **Note**: This step is unnecessary after running the `mvn` command for the Java server.
+2. Run `npm run serve` to start the development server on [https://localhost:443](https://localhost:443).
