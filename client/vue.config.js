@@ -6,6 +6,7 @@ module.exports = {
   outputDir: "target/dist",
   assetsDir: "static",
   devServer: {
+    // This is ONLY required for the dev server.
     host: "localhost",
     port: 443,
     https: {
