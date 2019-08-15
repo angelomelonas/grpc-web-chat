@@ -246,6 +246,8 @@ public class ChatTest {
 
     @Test
     public void multiClientTest() throws InterruptedException {
+        // TODO: This test sometimes fails. Investigate.
+
         String[] messagesToSendClient1 = new String[]{"Hello", "How are you?", "Great, thanks"};
         String[] messagesToSendClient2 = new String[]{"Hi", "Good thanks, and you?", "Cool"};
         String[] messagesToSendClient3 = new String[]{"Yo", "Alright", "Yeah"};

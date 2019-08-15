@@ -85,6 +85,18 @@
                             <workingDirectory>${project.parent.basedir}</workingDirectory>
                         </configuration>
                     </execution>
+                    <execution><!-- Run the create-cert-java.sh script to generate certificates. -->
+                        <id>Generate Java Certificates</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <commandlineArgs>create-cert-java.sh</commandlineArgs>
+                            <workingDirectory>${project.parent.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
