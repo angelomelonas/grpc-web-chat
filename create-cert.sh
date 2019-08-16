@@ -5,14 +5,6 @@
 # Also not that the backslashes (\\) after -subj should probably be replaced for Mac/Unix systems.  #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-C_CODE=ZA
-STATE=WesternCape
-LOCALITY=Stellenbosch
-COMPANY=ExampleCo
-UNIT=ExampleCoSecurityDepartment
-CA_CN_NAME=example-ca.com
-CN_NAME=ExampleCoCN
-EMAIL=security@example.com
 PASS=123456
 
 CERT_OUT_DIR=keystore
@@ -26,7 +18,7 @@ openssl genrsa -des3 -passout pass:${PASS} \
 
 echo Generating CA cetificate...
 openssl req -new -x509 -passin pass:${PASS} -days 365 -key ${CERT_OUT_DIR}/ca.key \
-        -out ${CERT_OUT_DIR}/ca.crt -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CA_CN_NAME}"
+        -out ${CERT_OUT_DIR}/ca.crt -config ${CERT_OUT_DIR}/config/certificate.conf
 
 # Server side key
 echo Generate server key...
@@ -35,12 +27,12 @@ openssl genrsa -des3 -passout pass:${PASS} \
 
 echo Generating server signing request...
 openssl req -new -passin pass:${PASS} -key ${CERT_OUT_DIR}/server.key \
-        -out ${CERT_OUT_DIR}/server.csr -subj "//C=${C_CODE}\ST=${STATE}\L=${LOCALITY}\O=${COMPANY}\OU=${UNIT}\CN=${CN_NAME}"
+        -out ${CERT_OUT_DIR}/server.csr -config ${CERT_OUT_DIR}/config/certificate.conf
 
 echo Generating server certificate...
 openssl x509 -req -passin pass:${PASS} -days 365 -in ${CERT_OUT_DIR}/server.csr \
         -CA ${CERT_OUT_DIR}/ca.crt -CAkey ${CERT_OUT_DIR}/ca.key -set_serial 01 \
-        -out ${CERT_OUT_DIR}/server.crt -sha256 -extfile ${CERT_OUT_DIR}/config/v3.ext
+        -out ${CERT_OUT_DIR}/server.crt -sha256 -extfile ${CERT_OUT_DIR}/config/certificate.conf -extensions req_ext
 
 # Remove servery key passphrase
 echo Removing passphrase from server key...
