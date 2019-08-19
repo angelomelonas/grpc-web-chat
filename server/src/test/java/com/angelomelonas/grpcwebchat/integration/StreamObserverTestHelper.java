@@ -35,7 +35,7 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
         try {
             synchronized (onNextLock) {
                 while (!onNext && !completed) {
-                    onNextLock.wait(100);
+                    onNextLock.wait(200);
                 }
                 this.onNext = false;
                 if (completed) {
@@ -52,7 +52,7 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
         try {
             synchronized (onNextLock) {
                 while (!onNext && !completed) {
-                    onNextLock.wait(100);
+                    onNextLock.wait(200);
                 }
             }
             if (!onNext) {
@@ -70,7 +70,7 @@ public class StreamObserverTestHelper<T> implements StreamObserver<T> {
         synchronized (completeLock) {
             while (!completed) {
                 try {
-                    completeLock.wait(100);
+                    completeLock.wait(200);
                 } catch (InterruptedException e) {
                     throw new IllegalStateException(e);
                 }
