@@ -2,13 +2,8 @@
 
 The Envoy Proxy is configured in the `envoy.yaml` file. The default setup is for `localhost`.
 
-##### For Windows
-1. Run `create-cert.sh` to create certificates.
-2. Add the generated `ca.crt` (from the `keystore` directory) to you machine's Trusted Root Certificates ([Manage Trusted Root Certificates in Windows 10/8](https://www.thewindowsclub.com/manage-trusted-root-certificates-windows)).
-3. From the root project directory, run `docker-compose up` to start Envoy.
-
-##### For Linux/OSX
-1. Modify the `create-cert.sh` by replacing double back slashes (`\\`) with single forward slash (`/`).
-2. Run `create-cert.sh` to create certificates.
-3. Add the generated `ca.crt` (from the `keystore` directory) to you machine's Trusted Root Certificates.
+##### Instructions for Creating Certificates
+1. Run `create-ca-cert.sh` to create the Certificate Authority Root.
+2. Run `create-cert.sh` to create server certificates, which use the CA Root created in the previous step.
+3. Add the generated `ca.crt` (from the `keystore` directory) to you machine's Trusted Root Certificates (e.g., for Windows: [Manage Trusted Root Certificates in Windows 10/8](https://www.thewindowsclub.com/manage-trusted-root-certificates-windows)).
 4. From the root project directory, run `docker-compose up` to start Envoy.

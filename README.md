@@ -55,9 +55,11 @@ master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
 4. _TODO: Run the Go server somehow..._
 
 ### Envoy Proxy
-1. From the root directory, run the `create-cert.sh` script. See the `envoy/README.md` file for more details. 
-    * **Note**: This step should be unnecessary for the Java project.
-2. Run `docker-compose up` from the root directory to start the Envoy proxy.
+1. From the root directory, run the `create-ca-cert.sh` script to generate the Certificate Authority.
+2. In the same directory, run the `create-cert.sh` script. See the `envoy/README.md` file for more details. 
+    * **Note**: This step should be unnecessary for the Java project if the `mvn clean install` command was used.
+3. Run `docker-compose up` from the root directory to start the Envoy proxy.
+    * **Note**: Remember to remove the Docker image after generating new certificates!
 
 ### Client Development Server
 1. Run `npm install` and then `npm run proto`.
