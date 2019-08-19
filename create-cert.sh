@@ -1,34 +1,22 @@
 #!/bin/bash
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Change the specific details here. Pay close attention to the CA_CN_NAME and the CN_NAME.          #
-# Also not that the backslashes (\\) after -subj should probably be replaced for Mac/Unix systems.  #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
 PASS=123456
 
 CERT_OUT_DIR=keystore
 CERT_OUT_ENVOY=envoy/certificates
 CERT_OUT_CLIENT=client/certificates
 
-# Certificate Authority
-echo Generating CA key...
-openssl genrsa -des3 -passout pass:${PASS} \
-        -out ${CERT_OUT_DIR}/ca.key 2048
-
-echo Generating CA cetificate...
-openssl req -new -x509 -passin pass:${PASS} -days 365 -key ${CERT_OUT_DIR}/ca.key \
-        -out ${CERT_OUT_DIR}/ca.crt -config ${CERT_OUT_DIR}/config/certificate.conf
-
-# Server side key
+# Server Key
 echo Generate server key...
 openssl genrsa -des3 -passout pass:${PASS} \
         -out ${CERT_OUT_DIR}/server.key 2048
 
+# Server Signing Request
 echo Generating server signing request...
 openssl req -new -passin pass:${PASS} -key ${CERT_OUT_DIR}/server.key \
         -out ${CERT_OUT_DIR}/server.csr -config ${CERT_OUT_DIR}/config/certificate.conf
 
+# Server Certificate using the CA Root
 echo Generating server certificate...
 openssl x509 -req -passin pass:${PASS} -days 365 -in ${CERT_OUT_DIR}/server.csr \
         -CA ${CERT_OUT_DIR}/ca.crt -CAkey ${CERT_OUT_DIR}/ca.key -set_serial 01 \
