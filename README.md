@@ -5,7 +5,7 @@ A simple project demonstrating how both a Go and Java back end can power the sam
     * The Java project uses the Spring Boot framework with Maven for dependency management.
     * _TODO: Go Lang project..._
 * The client is written in TypeScript and uses the [VueJS framework](https://github.com/vuejs/vue). It also uses [Vuetify](https://github.com/vuetifyjs/vuetify) and the [official gRPC-Web library](https://github.com/grpc/grpc-web).
-* The [Envoy Proxy](https://github.com/envoyproxy/envoy) is used to translate between the browser and the gRPC server.
+* The [Envoy Proxy](https://github.com/envoyproxy/envoy) is used to translate requests and responses between the browser and the gRPC server. Check out [the state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/).
     * TLS/SSL is used to allow HTTP2 connections between the browser and Envoy. This is to circumvent [browser connection limitations](https://docs.pushtechnology.com/cloud/latest/manual/html/designguide/solution/support/connection_limitations.html). More on this [here](https://github.com/grpc/grpc-web/issues/522).
 
 ## Overview
