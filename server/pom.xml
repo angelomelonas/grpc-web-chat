@@ -73,8 +73,20 @@
                 <version>1.6.0</version>
                 <groupId>org.codehaus.mojo</groupId>
                 <executions>
-                    <execution><!-- Run the create-cert.sh script to generate certificates. -->
-                        <id>Generate Certificates</id>
+                    <execution><!-- Run the create-ca-cert.sh script to generate the CA certificate. -->
+                        <id>Generate CA Certificate</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <commandlineArgs>create-ca-cert.sh</commandlineArgs>
+                            <workingDirectory>${project.parent.basedir}</workingDirectory>
+                        </configuration>
+                    </execution>
+                    <execution><!-- Run the create-cert.sh script to generate the server certificate. -->
+                        <id>Generate Server Certificate</id>
                         <phase>initialize</phase>
                         <goals>
                             <goal>exec</goal>
@@ -158,5 +170,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
