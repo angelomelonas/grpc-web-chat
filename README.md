@@ -5,7 +5,7 @@ A simple project demonstrating how both a Go and Java back end can power the sam
     * The Java project uses the Spring Boot framework with Maven for dependency management.
     * _TODO: Go Lang project..._
 * The client is written in TypeScript and uses the [VueJS framework](https://github.com/vuejs/vue). It also uses [Vuetify](https://github.com/vuetifyjs/vuetify) and the [official gRPC-Web library](https://github.com/grpc/grpc-web).
-* The [Envoy Proxy](https://github.com/envoyproxy/envoy) is used to translate between the browser and the gRPC server.
+* The [Envoy Proxy](https://github.com/envoyproxy/envoy) is used to translate requests and responses between the browser and the gRPC server. Check out [the state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/).
     * TLS/SSL is used to allow HTTP2 connections between the browser and Envoy. This is to circumvent [browser connection limitations](https://docs.pushtechnology.com/cloud/latest/manual/html/designguide/solution/support/connection_limitations.html). More on this [here](https://github.com/grpc/grpc-web/issues/522).
 
 ## Overview
@@ -55,9 +55,11 @@ master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
 4. _TODO: Run the Go server somehow..._
 
 ### Envoy Proxy
-1. From the root directory, run the `create-cert.sh` script. See the `envoy/README.md` file for more details. 
-    * **Note**: This step should be unnecessary for the Java project.
-2. Run `docker-compose up` from the root directory to start the Envoy proxy.
+1. From the root directory, run the `create-ca-cert.sh` script to generate the Certificate Authority.
+2. In the same directory, run the `create-cert.sh` script. See the `envoy/README.md` file for more details. 
+    * **Note**: This step should be unnecessary for the Java project if the `mvn clean install` command was used.
+3. Run `docker-compose up` from the root directory to start the Envoy proxy.
+    * **Note**: Remember to remove the Docker image after generating new certificates!
 
 ### Client Development Server
 1. Run `npm install` and then `npm run proto`.
