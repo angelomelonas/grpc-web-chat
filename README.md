@@ -19,8 +19,9 @@ The root of the project contains the shared API and client code. Checkout the re
 master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
                                 -> java-dev-stable  [-> java-dev]
 ```
+## Installation for Development
 
-## Requirements
+### Requirements
 ##### Docker
 1. Install Docker on your local machine.
 
@@ -35,8 +36,6 @@ master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
 2. Select the latest release version.
 3. Scroll down to `Assets` and download the applicable file (e.g., for Windows `protoc-gen-grpc-web-1.0.4-windows-x86_64.exe`).
 4. Extract the `protoc-gen-grpc-web` file a directory and it to your path (e.g., for Windows add the `protoc-gen-grpc-web.exe` file to your path).
-
-## Installation
 
 ### Server
 
@@ -65,3 +64,39 @@ master  -> dev-stable [-> dev]  -> go-dev-stable    [-> go-dev]
 1. Run `npm install` and then `npm run proto`.
     * **Note**: This step is unnecessary after running the `mvn clean install` command for the Java server.
 2. Run `npm run serve` to start the development server on [https://localhost:443](https://localhost:443).
+
+## Installation for Production
+### Requirements
+##### Docker
+1. Install Docker on the Linux host machine. Follow the relevant instructions here:
+    * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
+    * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
+    * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
+    * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+2. Install Docker Compose by running the following two commands (see more on [Install Docker Compose](https://docs.docker.com/compose/install/)):
+   ```
+   sudo curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+   sudo chmod +x /usr/local/bin/docker-compose
+   ```  
+
+#### Java
+1. From within the project root directory, run the `mvn clean install -U` command to build the Java project.
+2. Copy the generated `.jar` file to a directory on the host machine.
+3. Run the Java Server with `java -jar server-<version>.jar` to start the server.
+
+#### Go
+1. _TODO: Figure out how to run the Go server on production._
+
+### Envoy Proxy
+1. Modify the `envoy.yaml` file for production. Change the following:
+    * Change the `domains` value to the host machine IP address (or `*` to allow all domains).
+    * Change the `cors` `allow_origin` to the correct domain (e.g., https://example.com). You can also use `*` to allow all origins.
+    * Change the `hosts` `socket address` to the machine IP address.
+2. Copy the `envoy` directory to a directory on the host machine.
+3. Copy the `docker-compose.yml` file one level up from the `envoy` directory copied in the previous step.
+3. Run `docker-compose up` to build and deploy the Docker image.
+    * **NOTE**: Remember to remove the docker image before running the `docker-compose` command if any changes to Envoy or the certificates were made.
+
+### Client
+1. If using a custom CA, add the relevant `ca.crt` file to the Trusted Root Certificate Authorities on your local machine.
+2. The client should now be running on `https://<host-machine-ip>`.
